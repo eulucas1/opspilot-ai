@@ -11,7 +11,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@opspilot/shared-types": "workspace:*",
+    "@opspilot/shared-types": "file:../../packages/shared-types",
     "next": "^15.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

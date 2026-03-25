@@ -5,12 +5,11 @@ WORKDIR /workspace
 COPY package.json ./package.json
 COPY tsconfig.base.json ./tsconfig.base.json
 COPY apps/web/package.json ./apps/web/package.json
-COPY packages/shared-types/package.json ./packages/shared-types/package.json
+COPY packages/shared-types ./packages/shared-types
 
 RUN npm install
 
 COPY apps/web ./apps/web
-COPY packages/shared-types ./packages/shared-types
 
 EXPOSE 3000
 
