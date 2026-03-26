@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.schemas.ticket import TicketCreateRequest, TicketRead
-from app.services.ticket_service import create_ticket, get_ticket_by_id, list_tickets
+from app.schemas.ticket import TicketCreateRequest, TicketRead, TicketStatusUpdateRequest
+from app.services.ticket_service import create_ticket, get_ticket_by_id, list_tickets, update_ticket_status
 
 router = APIRouter(prefix="/tickets")
 
@@ -28,5 +28,23 @@ def get_ticket(ticket_id: UUID, db: Session = Depends(get_db)) -> TicketRead:
 def post_ticket(payload: TicketCreateRequest, db: Session = Depends(get_db)) -> TicketRead:
     try:
         return create_ticket(db, payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+
+@router.patch(
+    "/{ticket_id}/status",
+    response_model=TicketRead,
+    summary="Update a ticket status",
+)
+def patch_ticket_status(
+    ticket_id: UUID,
+    payload: TicketStatusUpdateRequest,
+    db: Session = Depends(get_db),
+) -> TicketRead:
+    try:
+        return update_ticket_status(db, ticket_id=ticket_id, new_status=payload.status)
+    except LookupError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
