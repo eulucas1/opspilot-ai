@@ -15,4 +15,5 @@ class Organization(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     users: Mapped[list["User"]] = relationship(back_populates="organization")
     tickets: Mapped[list["Ticket"]] = relationship(back_populates="organization")
+    comments: Mapped[list["Comment"]] = relationship(back_populates="organization")
     audit_logs: Mapped[list["AuditLog"]] = relationship(back_populates="organization")

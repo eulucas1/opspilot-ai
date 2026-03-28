@@ -4,7 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
+from app.schemas.comment import CommentCreateRequest, CommentRead
 from app.schemas.ticket import TicketCreateRequest, TicketRead, TicketStatusUpdateRequest
+from app.services.comment_service import create_ticket_comment, list_ticket_comments
 from app.services.ticket_service import create_ticket, get_ticket_by_id, list_tickets, update_ticket_status
 
 router = APIRouter(prefix="/tickets")
@@ -44,6 +46,37 @@ def patch_ticket_status(
 ) -> TicketRead:
     try:
         return update_ticket_status(db, ticket_id=ticket_id, new_status=payload.status)
+    except LookupError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+
+@router.get(
+    "/{ticket_id}/comments",
+    response_model=list[CommentRead],
+    summary="List comments for a ticket",
+)
+def get_ticket_comments(ticket_id: UUID, db: Session = Depends(get_db)) -> list[CommentRead]:
+    try:
+        return list_ticket_comments(db, ticket_id=ticket_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+
+
+@router.post(
+    "/{ticket_id}/comments",
+    response_model=CommentRead,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a comment for a ticket",
+)
+def post_ticket_comment(
+    ticket_id: UUID,
+    payload: CommentCreateRequest,
+    db: Session = Depends(get_db),
+) -> CommentRead:
+    try:
+        return create_ticket_comment(db, ticket_id=ticket_id, payload=payload)
     except LookupError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except ValueError as exc:
