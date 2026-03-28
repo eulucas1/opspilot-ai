@@ -29,6 +29,13 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
 
     organization: Mapped["Organization"] = relationship(back_populates="users")
-    created_tickets: Mapped[list["Ticket"]] = relationship(back_populates="created_by_user")
+    created_tickets: Mapped[list["Ticket"]] = relationship(
+        back_populates="created_by_user",
+        foreign_keys="Ticket.created_by_user_id",
+    )
+    assigned_tickets: Mapped[list["Ticket"]] = relationship(
+        back_populates="assignee_user",
+        foreign_keys="Ticket.assignee_user_id",
+    )
     comments: Mapped[list["Comment"]] = relationship(back_populates="user")
     audit_logs: Mapped[list["AuditLog"]] = relationship(back_populates="user")

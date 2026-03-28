@@ -36,12 +36,14 @@ def seed_ticket(
     *,
     status: str = "open",
     priority: str = "medium",
+    assignee_user_id: UUID | None = None,
     updated_at: datetime | None = None,
 ) -> tuple[Organization, User, Ticket]:
     organization, user = seed_organization_and_user(db_session)
     ticket = Ticket(
         organization_id=organization.id,
         created_by_user_id=user.id,
+        assignee_user_id=assignee_user_id,
         title="Seeded ticket",
         description="Seeded description",
         status=status,
@@ -219,3 +221,133 @@ def test_patch_ticket_status_returns_400_when_status_is_the_same(client, db_sess
 
     assert response.status_code == 400
     assert response.json() == {"detail": "status is already set to 'open'"}
+
+
+def test_patch_ticket_assignee_assigns_user_and_creates_audit_log(client, db_session: Session) -> None:
+    old_timestamp = datetime.now(UTC) - timedelta(days=1)
+    organization, created_by_user, ticket = seed_ticket(db_session, updated_at=old_timestamp)
+    assignee = User(
+        organization=organization,
+        name="Assigned User",
+        email=f"assigned-{uuid4().hex[:8]}@example.com",
+        role="analyst",
+        is_active=True,
+    )
+    db_session.add(assignee)
+    db_session.commit()
+    db_session.refresh(assignee)
+
+    response = client.patch(
+        f"/tickets/{ticket.id}/assignee",
+        json={"assignee_user_id": str(assignee.id)},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == str(ticket.id)
+    assert data["assignee_user_id"] == str(assignee.id)
+
+    db_session.refresh(ticket)
+    assert ticket.assignee_user_id == assignee.id
+    assert ticket.updated_at > old_timestamp
+
+    audit_log = db_session.scalar(
+        select(AuditLog).where(
+            AuditLog.entity_id == ticket.id,
+            AuditLog.action == "ticket_assignee_changed",
+        )
+    )
+
+    assert audit_log is not None
+    assert audit_log.organization_id == organization.id
+    assert audit_log.user_id == created_by_user.id
+    assert audit_log.metadata_ == {
+        "old_assignee_user_id": None,
+        "new_assignee_user_id": str(assignee.id),
+    }
+
+
+def test_patch_ticket_assignee_returns_404_when_ticket_does_not_exist(client) -> None:
+    response = client.patch(
+        f"/tickets/{uuid4()}/assignee",
+        json={"assignee_user_id": str(uuid4())},
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Ticket not found"}
+
+
+def test_patch_ticket_assignee_returns_400_when_user_does_not_exist(client, db_session: Session) -> None:
+    _, _, ticket = seed_ticket(db_session)
+
+    response = client.patch(
+        f"/tickets/{ticket.id}/assignee",
+        json={"assignee_user_id": str(uuid4())},
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "assignee_user_id does not exist"}
+
+
+def test_patch_ticket_assignee_returns_400_when_user_is_from_other_organization(
+    client,
+    db_session: Session,
+) -> None:
+    _, _, ticket = seed_ticket(db_session)
+    other_organization = Organization(
+        name="Other Org",
+        slug=f"other-org-{uuid4().hex[:8]}",
+    )
+    other_user = User(
+        organization=other_organization,
+        name="External User",
+        email=f"external-{uuid4().hex[:8]}@example.com",
+        role="analyst",
+        is_active=True,
+    )
+    db_session.add_all([other_organization, other_user])
+    db_session.commit()
+    db_session.refresh(other_user)
+
+    response = client.patch(
+        f"/tickets/{ticket.id}/assignee",
+        json={"assignee_user_id": str(other_user.id)},
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "assignee_user_id does not belong to ticket organization"}
+
+
+def test_patch_ticket_assignee_returns_400_when_assignee_is_the_same(client, db_session: Session) -> None:
+    organization, _ = seed_organization_and_user(db_session)
+    assignee = User(
+        organization=organization,
+        name="Repeated Assignee",
+        email=f"repeat-{uuid4().hex[:8]}@example.com",
+        role="analyst",
+        is_active=True,
+    )
+    db_session.add(assignee)
+    db_session.commit()
+    db_session.refresh(assignee)
+
+    ticket = Ticket(
+        organization_id=organization.id,
+        created_by_user_id=assignee.id,
+        assignee_user_id=assignee.id,
+        title="Already assigned",
+        description="Ticket already assigned to the same user",
+        status="open",
+        priority="medium",
+    )
+    db_session.add(ticket)
+    db_session.commit()
+    db_session.refresh(ticket)
+
+    response = client.patch(
+        f"/tickets/{ticket.id}/assignee",
+        json={"assignee_user_id": str(assignee.id)},
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "assignee_user_id is already assigned to this ticket"}

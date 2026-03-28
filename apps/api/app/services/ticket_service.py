@@ -91,3 +91,42 @@ def update_ticket_status(db: Session, ticket_id: UUID, new_status: str) -> Ticke
     db.refresh(ticket)
 
     return ticket
+
+
+def update_ticket_assignee(db: Session, ticket_id: UUID, assignee_user_id: UUID) -> Ticket:
+    ticket = get_ticket_by_id(db, ticket_id)
+    if ticket is None:
+        raise LookupError("Ticket not found")
+
+    assignee = db.get(User, assignee_user_id)
+    if assignee is None:
+        raise ValueError("assignee_user_id does not exist")
+
+    if assignee.organization_id != ticket.organization_id:
+        raise ValueError("assignee_user_id does not belong to ticket organization")
+
+    if ticket.assignee_user_id == assignee_user_id:
+        raise ValueError("assignee_user_id is already assigned to this ticket")
+
+    old_assignee_user_id = (
+        str(ticket.assignee_user_id) if ticket.assignee_user_id is not None else None
+    )
+    ticket.assignee_user_id = assignee_user_id
+
+    audit_log = AuditLog(
+        organization_id=ticket.organization_id,
+        user_id=ticket.created_by_user_id,
+        entity_type="ticket",
+        entity_id=ticket.id,
+        action="ticket_assignee_changed",
+        metadata_={
+            "old_assignee_user_id": old_assignee_user_id,
+            "new_assignee_user_id": str(assignee_user_id),
+        },
+    )
+    db.add(audit_log)
+
+    db.commit()
+    db.refresh(ticket)
+
+    return ticket

@@ -17,9 +17,14 @@ class TicketStatusUpdateRequest(BaseModel):
     status: str = Field(min_length=1, max_length=100)
 
 
+class TicketAssigneeUpdateRequest(BaseModel):
+    assignee_user_id: UUID
+
+
 class TicketRead(TimestampedSchema):
     organization_id: UUID
     created_by_user_id: UUID
+    assignee_user_id: UUID | None
     title: str
     description: str
     status: str
