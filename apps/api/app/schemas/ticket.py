@@ -13,6 +13,10 @@ class TicketCreateRequest(BaseModel):
     priority: str = Field(min_length=1, max_length=100)
 
 
+class TicketStatusUpdateRequest(BaseModel):
+    status: str = Field(min_length=1, max_length=100)
+
+
 class TicketRead(TimestampedSchema):
     organization_id: UUID
     created_by_user_id: UUID

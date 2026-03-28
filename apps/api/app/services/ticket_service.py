@@ -9,6 +9,8 @@ from app.models.ticket import Ticket
 from app.models.user import User
 from app.schemas.ticket import TicketCreateRequest
 
+VALID_TICKET_STATUSES = ("open", "in_progress", "resolved", "closed")
+
 
 def list_tickets(db: Session) -> list[Ticket]:
     statement = select(Ticket).order_by(Ticket.created_at.desc())
@@ -48,6 +50,40 @@ def create_ticket(db: Session, payload: TicketCreateRequest) -> Ticket:
         entity_type="ticket",
         entity_id=ticket.id,
         action="ticket_created",
+    )
+    db.add(audit_log)
+
+    db.commit()
+    db.refresh(ticket)
+
+    return ticket
+
+
+def update_ticket_status(db: Session, ticket_id: UUID, new_status: str) -> Ticket:
+    ticket = get_ticket_by_id(db, ticket_id)
+    if ticket is None:
+        raise LookupError("Ticket not found")
+
+    if new_status not in VALID_TICKET_STATUSES:
+        valid_statuses = ", ".join(VALID_TICKET_STATUSES)
+        raise ValueError(f"status must be one of: {valid_statuses}")
+
+    if new_status == ticket.status:
+        raise ValueError(f"status is already set to '{new_status}'")
+
+    old_status = ticket.status
+    ticket.status = new_status
+
+    audit_log = AuditLog(
+        organization_id=ticket.organization_id,
+        user_id=ticket.created_by_user_id,
+        entity_type="ticket",
+        entity_id=ticket.id,
+        action="ticket_status_changed",
+        metadata_={
+            "old_status": old_status,
+            "new_status": new_status,
+        },
     )
     db.add(audit_log)
 
