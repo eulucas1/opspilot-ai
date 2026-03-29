@@ -5,9 +5,20 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.schemas.comment import CommentCreateRequest, CommentRead
-from app.schemas.ticket import TicketCreateRequest, TicketRead, TicketStatusUpdateRequest
+from app.schemas.ticket import (
+    TicketAssigneeUpdateRequest,
+    TicketCreateRequest,
+    TicketRead,
+    TicketStatusUpdateRequest,
+)
 from app.services.comment_service import create_ticket_comment, list_ticket_comments
-from app.services.ticket_service import create_ticket, get_ticket_by_id, list_tickets, update_ticket_status
+from app.services.ticket_service import (
+    create_ticket,
+    get_ticket_by_id,
+    list_tickets,
+    update_ticket_assignee,
+    update_ticket_status,
+)
 
 router = APIRouter(prefix="/tickets")
 
@@ -46,6 +57,28 @@ def patch_ticket_status(
 ) -> TicketRead:
     try:
         return update_ticket_status(db, ticket_id=ticket_id, new_status=payload.status)
+    except LookupError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+
+@router.patch(
+    "/{ticket_id}/assignee",
+    response_model=TicketRead,
+    summary="Assign a ticket to a user",
+)
+def patch_ticket_assignee(
+    ticket_id: UUID,
+    payload: TicketAssigneeUpdateRequest,
+    db: Session = Depends(get_db),
+) -> TicketRead:
+    try:
+        return update_ticket_assignee(
+            db,
+            ticket_id=ticket_id,
+            assignee_user_id=payload.assignee_user_id,
+        )
     except LookupError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except ValueError as exc:
