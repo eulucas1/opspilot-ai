@@ -1,4 +1,4 @@
-.PHONY: up down logs api-test api-migrate web-install web-dev web-build web-lint
+.PHONY: up down logs api-test api-migrate api-seed web-install web-dev web-build web-lint
 
 up:
 	docker compose up --build -d
@@ -14,6 +14,9 @@ api-test:
 
 api-migrate:
 	cd apps/api && alembic upgrade head
+
+api-seed:
+	docker compose run --rm api python -m app.scripts.seed_dev
 
 web-install:
 	npm install
