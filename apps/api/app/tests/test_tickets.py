@@ -31,6 +31,28 @@ def seed_organization_and_user(db_session: Session) -> tuple[Organization, User]
     return organization, user
 
 
+def seed_user_in_organization(
+    db_session: Session,
+    organization: Organization,
+    *,
+    name: str = "Support User",
+    role: str = "analyst",
+) -> User:
+    user = User(
+        organization=organization,
+        name=name,
+        email=f"{name.lower().replace(' ', '-')}-{uuid4().hex[:8]}@example.com",
+        role=role,
+        is_active=True,
+    )
+
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+
+    return user
+
+
 def seed_ticket(
     db_session: Session,
     *,
@@ -58,20 +80,52 @@ def seed_ticket(
     return organization, user, ticket
 
 
+def create_ticket_record(
+    db_session: Session,
+    *,
+    organization: Organization,
+    created_by_user: User,
+    title: str,
+    description: str = "Seeded description",
+    status: str = "open",
+    priority: str = "medium",
+    assignee_user_id: UUID | None = None,
+    created_at: datetime | None = None,
+) -> Ticket:
+    ticket = Ticket(
+        organization_id=organization.id,
+        created_by_user_id=created_by_user.id,
+        assignee_user_id=assignee_user_id,
+        title=title,
+        description=description,
+        status=status,
+        priority=priority,
+        created_at=created_at,
+    )
+
+    db_session.add(ticket)
+    db_session.commit()
+    db_session.refresh(ticket)
+
+    return ticket
+
+
 def test_get_tickets_returns_most_recent_first(client, db_session: Session) -> None:
     organization, user = seed_organization_and_user(db_session)
-    older_ticket = Ticket(
-        organization_id=organization.id,
-        created_by_user_id=user.id,
+    create_ticket_record(
+        db_session,
+        organization=organization,
+        created_by_user=user,
         title="Older ticket",
         description="Older description",
         status="open",
         priority="low",
         created_at=datetime.now(UTC) - timedelta(days=1),
     )
-    newer_ticket = Ticket(
-        organization_id=organization.id,
-        created_by_user_id=user.id,
+    create_ticket_record(
+        db_session,
+        organization=organization,
+        created_by_user=user,
         title="Newer ticket",
         description="Newer description",
         status="open",
@@ -79,13 +133,191 @@ def test_get_tickets_returns_most_recent_first(client, db_session: Session) -> N
         created_at=datetime.now(UTC),
     )
 
-    db_session.add_all([older_ticket, newer_ticket])
-    db_session.commit()
-
     response = client.get("/tickets")
 
     assert response.status_code == 200
     assert [item["title"] for item in response.json()] == ["Newer ticket", "Older ticket"]
+
+
+def test_get_tickets_filters_by_status(client, db_session: Session) -> None:
+    organization, user = seed_organization_and_user(db_session)
+    create_ticket_record(
+        db_session,
+        organization=organization,
+        created_by_user=user,
+        title="Open ticket",
+        status="open",
+    )
+    matching_ticket = create_ticket_record(
+        db_session,
+        organization=organization,
+        created_by_user=user,
+        title="Resolved ticket",
+        status="resolved",
+    )
+
+    response = client.get("/tickets", params={"status": "resolved"})
+
+    assert response.status_code == 200
+    assert [item["id"] for item in response.json()] == [str(matching_ticket.id)]
+
+
+def test_get_tickets_filters_by_priority(client, db_session: Session) -> None:
+    organization, user = seed_organization_and_user(db_session)
+    create_ticket_record(
+        db_session,
+        organization=organization,
+        created_by_user=user,
+        title="Low priority ticket",
+        priority="low",
+    )
+    matching_ticket = create_ticket_record(
+        db_session,
+        organization=organization,
+        created_by_user=user,
+        title="High priority ticket",
+        priority="high",
+    )
+
+    response = client.get("/tickets", params={"priority": "high"})
+
+    assert response.status_code == 200
+    assert [item["id"] for item in response.json()] == [str(matching_ticket.id)]
+
+
+def test_get_tickets_filters_by_organization_id(client, db_session: Session) -> None:
+    matching_organization, matching_user = seed_organization_and_user(db_session)
+    other_organization, other_user = seed_organization_and_user(db_session)
+    matching_ticket = create_ticket_record(
+        db_session,
+        organization=matching_organization,
+        created_by_user=matching_user,
+        title="Matching organization ticket",
+    )
+    create_ticket_record(
+        db_session,
+        organization=other_organization,
+        created_by_user=other_user,
+        title="Other organization ticket",
+    )
+
+    response = client.get(
+        "/tickets",
+        params={"organization_id": str(matching_organization.id)},
+    )
+
+    assert response.status_code == 200
+    assert [item["id"] for item in response.json()] == [str(matching_ticket.id)]
+
+
+def test_get_tickets_filters_by_created_by_user_id(client, db_session: Session) -> None:
+    organization, created_by_user = seed_organization_and_user(db_session)
+    other_user = seed_user_in_organization(db_session, organization, name="Second User")
+    matching_ticket = create_ticket_record(
+        db_session,
+        organization=organization,
+        created_by_user=created_by_user,
+        title="Creator match ticket",
+    )
+    create_ticket_record(
+        db_session,
+        organization=organization,
+        created_by_user=other_user,
+        title="Other creator ticket",
+    )
+
+    response = client.get(
+        "/tickets",
+        params={"created_by_user_id": str(created_by_user.id)},
+    )
+
+    assert response.status_code == 200
+    assert [item["id"] for item in response.json()] == [str(matching_ticket.id)]
+
+
+def test_get_tickets_filters_by_assignee_user_id(client, db_session: Session) -> None:
+    organization, created_by_user = seed_organization_and_user(db_session)
+    matching_assignee = seed_user_in_organization(db_session, organization, name="Assigned Analyst")
+    other_assignee = seed_user_in_organization(db_session, organization, name="Other Analyst")
+    matching_ticket = create_ticket_record(
+        db_session,
+        organization=organization,
+        created_by_user=created_by_user,
+        title="Matching assignee ticket",
+        assignee_user_id=matching_assignee.id,
+    )
+    create_ticket_record(
+        db_session,
+        organization=organization,
+        created_by_user=created_by_user,
+        title="Other assignee ticket",
+        assignee_user_id=other_assignee.id,
+    )
+
+    response = client.get(
+        "/tickets",
+        params={"assignee_user_id": str(matching_assignee.id)},
+    )
+
+    assert response.status_code == 200
+    assert [item["id"] for item in response.json()] == [str(matching_ticket.id)]
+
+
+def test_get_tickets_filters_by_status_and_priority(client, db_session: Session) -> None:
+    organization, user = seed_organization_and_user(db_session)
+    matching_ticket = create_ticket_record(
+        db_session,
+        organization=organization,
+        created_by_user=user,
+        title="Resolved high ticket",
+        status="resolved",
+        priority="high",
+    )
+    create_ticket_record(
+        db_session,
+        organization=organization,
+        created_by_user=user,
+        title="Resolved low ticket",
+        status="resolved",
+        priority="low",
+    )
+    create_ticket_record(
+        db_session,
+        organization=organization,
+        created_by_user=user,
+        title="Open high ticket",
+        status="open",
+        priority="high",
+    )
+
+    response = client.get(
+        "/tickets",
+        params={
+            "status": "resolved",
+            "priority": "high",
+        },
+    )
+
+    assert response.status_code == 200
+    assert [item["id"] for item in response.json()] == [str(matching_ticket.id)]
+
+
+def test_get_tickets_returns_400_when_status_filter_is_invalid(client) -> None:
+    response = client.get("/tickets", params={"status": "pending"})
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": "status must be one of: open, in_progress, resolved, closed"
+    }
+
+
+def test_get_tickets_returns_400_when_priority_filter_is_invalid(client) -> None:
+    response = client.get("/tickets", params={"priority": "urgent"})
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": "priority must be one of: low, medium, high"
+    }
 
 
 def test_get_ticket_by_id_returns_ticket(client, db_session: Session) -> None:
