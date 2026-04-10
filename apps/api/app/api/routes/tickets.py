@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.schemas.comment import CommentCreateRequest, CommentRead
+from app.schemas.audit_log import AuditLogRead
 from app.schemas.ticket import (
     TicketAssigneeUpdateRequest,
     TicketCreateRequest,
@@ -15,6 +16,7 @@ from app.services.comment_service import create_ticket_comment, list_ticket_comm
 from app.services.ticket_service import (
     create_ticket,
     get_ticket_by_id,
+    list_ticket_activity,
     list_tickets,
     update_ticket_assignee,
     update_ticket_status,
@@ -100,6 +102,18 @@ def patch_ticket_assignee(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+
+@router.get(
+    "/{ticket_id}/activity",
+    response_model=list[AuditLogRead],
+    summary="List activity for a ticket",
+)
+def get_ticket_activity(ticket_id: UUID, db: Session = Depends(get_db)) -> list[AuditLogRead]:
+    try:
+        return list_ticket_activity(db, ticket_id=ticket_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 
 
 @router.get(
