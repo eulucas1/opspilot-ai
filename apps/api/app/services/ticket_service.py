@@ -10,10 +10,44 @@ from app.models.user import User
 from app.schemas.ticket import TicketCreateRequest
 
 VALID_TICKET_STATUSES = ("open", "in_progress", "resolved", "closed")
+VALID_TICKET_PRIORITIES = ("low", "medium", "high")
 
 
-def list_tickets(db: Session) -> list[Ticket]:
-    statement = select(Ticket).order_by(Ticket.created_at.desc())
+def list_tickets(
+    db: Session,
+    *,
+    status: str | None = None,
+    priority: str | None = None,
+    organization_id: UUID | None = None,
+    created_by_user_id: UUID | None = None,
+    assignee_user_id: UUID | None = None,
+) -> list[Ticket]:
+    if status is not None and status not in VALID_TICKET_STATUSES:
+        valid_statuses = ", ".join(VALID_TICKET_STATUSES)
+        raise ValueError(f"status must be one of: {valid_statuses}")
+
+    if priority is not None and priority not in VALID_TICKET_PRIORITIES:
+        valid_priorities = ", ".join(VALID_TICKET_PRIORITIES)
+        raise ValueError(f"priority must be one of: {valid_priorities}")
+
+    statement = select(Ticket)
+
+    if status is not None:
+        statement = statement.where(Ticket.status == status)
+
+    if priority is not None:
+        statement = statement.where(Ticket.priority == priority)
+
+    if organization_id is not None:
+        statement = statement.where(Ticket.organization_id == organization_id)
+
+    if created_by_user_id is not None:
+        statement = statement.where(Ticket.created_by_user_id == created_by_user_id)
+
+    if assignee_user_id is not None:
+        statement = statement.where(Ticket.assignee_user_id == assignee_user_id)
+
+    statement = statement.order_by(Ticket.created_at.desc())
     return list(db.scalars(statement).all())
 
 

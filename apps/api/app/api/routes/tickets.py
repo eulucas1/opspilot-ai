@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -24,8 +24,25 @@ router = APIRouter(prefix="/tickets")
 
 
 @router.get("", response_model=list[TicketRead], summary="List tickets")
-def get_tickets(db: Session = Depends(get_db)) -> list[TicketRead]:
-    return list_tickets(db)
+def get_tickets(
+    ticket_status: str | None = Query(default=None, alias="status"),
+    priority: str | None = None,
+    organization_id: UUID | None = None,
+    created_by_user_id: UUID | None = None,
+    assignee_user_id: UUID | None = None,
+    db: Session = Depends(get_db),
+) -> list[TicketRead]:
+    try:
+        return list_tickets(
+            db,
+            status=ticket_status,
+            priority=priority,
+            organization_id=organization_id,
+            created_by_user_id=created_by_user_id,
+            assignee_user_id=assignee_user_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
 
 @router.get("/{ticket_id}", response_model=TicketRead, summary="Get a ticket by id")
