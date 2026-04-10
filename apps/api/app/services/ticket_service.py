@@ -1,9 +1,10 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
 from app.models.audit_log import AuditLog
+from app.models.comment import Comment
 from app.models.organization import Organization
 from app.models.ticket import Ticket
 from app.models.user import User
@@ -53,6 +54,31 @@ def list_tickets(
 
 def get_ticket_by_id(db: Session, ticket_id: UUID) -> Ticket | None:
     return db.get(Ticket, ticket_id)
+
+
+def list_ticket_activity(db: Session, ticket_id: UUID) -> list[AuditLog]:
+    ticket = get_ticket_by_id(db, ticket_id)
+    if ticket is None:
+        raise LookupError("Ticket not found")
+
+    comment_ids_for_ticket = select(Comment.id).where(Comment.ticket_id == ticket_id)
+    statement = (
+        select(AuditLog)
+        .where(
+            or_(
+                and_(
+                    AuditLog.entity_type == "ticket",
+                    AuditLog.entity_id == ticket_id,
+                ),
+                and_(
+                    AuditLog.entity_type == "ticket_comment",
+                    AuditLog.entity_id.in_(comment_ids_for_ticket),
+                ),
+            )
+        )
+        .order_by(AuditLog.created_at.asc())
+    )
+    return list(db.scalars(statement).all())
 
 
 def create_ticket(db: Session, payload: TicketCreateRequest) -> Ticket:

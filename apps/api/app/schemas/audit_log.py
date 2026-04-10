@@ -12,4 +12,4 @@ class AuditLogRead(CreatedSchema):
     entity_type: str
     entity_id: UUID
     action: str
-    metadata: dict[str, Any] | None = Field(default=None, alias="metadata_")
+    metadata: dict[str, Any] | None = Field(default=None, validation_alias="metadata_")
