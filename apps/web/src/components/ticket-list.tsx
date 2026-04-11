@@ -83,15 +83,23 @@ function EmptyState({
           ? "Try removing one of the active filters to broaden the result set."
           : "Once the backend has tickets available, they will appear here automatically."}
       </p>
-      {hasActiveFilters ? (
-        <button
-          className="mt-5 rounded-full border border-ink/15 px-4 py-2 text-sm font-medium text-ink transition hover:border-copper hover:text-copper"
-          onClick={onClearFilters}
-          type="button"
+      <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+        {hasActiveFilters ? (
+          <button
+            className="rounded-full border border-ink/15 px-4 py-2 text-sm font-medium text-ink transition hover:border-copper hover:text-copper"
+            onClick={onClearFilters}
+            type="button"
+          >
+            Clear filters
+          </button>
+        ) : null}
+        <Link
+          className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-sand transition hover:bg-[#18324d]"
+          href="/tickets/new"
         >
-          Clear filters
-        </button>
-      ) : null}
+          Create a ticket
+        </Link>
+      </div>
     </div>
   );
 }
@@ -121,46 +129,55 @@ export function TicketList({
       {tickets.map((ticket) => (
         <article
           key={ticket.id}
-          className="rounded-[1.5rem] border border-ink/10 bg-white/80 p-5 shadow-soft backdrop-blur"
+          className="group rounded-[1.5rem] border border-ink/10 bg-white/80 p-5 shadow-soft backdrop-blur transition hover:-translate-y-0.5 hover:border-copper/40 hover:shadow-lg"
         >
-          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-copper">
+          <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper">
                 Ticket
               </p>
-              <h3 className="mt-2 text-xl font-semibold text-ink">
+              <h3 className="text-2xl font-semibold text-ink">
                 <Link
-                  className="transition hover:text-copper"
+                  className="transition group-hover:text-copper"
                   href={`/tickets/${ticket.id}`}
                 >
                   {ticket.title}
                 </Link>
               </h3>
-              <p className="mt-3 text-sm leading-7 text-ink/65">
-                Created on {formatTicketDate(ticket.created_at)}
-              </p>
+              <div className="flex flex-wrap items-center gap-3 text-sm text-ink/70">
+                <span className="rounded-full border border-ink/10 bg-sand/60 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-ink/60">
+                  Created
+                </span>
+                <span className="text-sm font-medium text-ink/70">
+                  {formatTicketDate(ticket.created_at)}
+                </span>
+              </div>
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span
-                className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] ${getTicketStatusClasses(ticket.status)}`}
+                className={`rounded-full border border-white/70 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] ${getTicketStatusClasses(ticket.status)}`}
               >
                 {formatTicketStatusLabel(ticket.status)}
               </span>
               <span
-                className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] ${getTicketPriorityClasses(ticket.priority)}`}
+                className={`rounded-full border border-white/70 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] ${getTicketPriorityClasses(ticket.priority)}`}
               >
                 {formatTicketPriorityLabel(ticket.priority)}
               </span>
             </div>
           </div>
 
-          <div className="mt-5 flex justify-end">
+          <div className="mt-6 flex flex-wrap justify-between gap-3">
+            <div className="text-xs uppercase tracking-[0.2em] text-ink/50">
+              View the full ticket details and history
+            </div>
             <Link
-              className="rounded-full border border-ink/10 px-4 py-2 text-sm font-medium text-ink transition hover:border-copper hover:text-copper"
+              className="inline-flex items-center gap-2 rounded-full border border-ink/10 px-4 py-2 text-sm font-medium text-ink transition hover:border-copper hover:text-copper"
               href={`/tickets/${ticket.id}`}
             >
               View details
+              <span aria-hidden="true">→</span>
             </Link>
           </div>
         </article>
