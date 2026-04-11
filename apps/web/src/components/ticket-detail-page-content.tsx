@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import {
   ApiRequestError,
+  createTicketComment,
   fetchTicketActivity,
   fetchTicketById,
   fetchTicketComments,
@@ -20,6 +21,7 @@ import {
 } from "@/lib/ticket-display";
 import { TicketActivitySection } from "@/components/ticket-activity-section";
 import { TicketAssigneeUpdate } from "@/components/ticket-assignee-update";
+import { TicketCommentCreate } from "@/components/ticket-comment-create";
 import { TicketCommentsSection } from "@/components/ticket-comments-section";
 import { TicketStatusUpdate } from "@/components/ticket-status-update";
 import type {
@@ -32,6 +34,9 @@ import type {
 type TicketDetailPageContentProps = {
   ticketId: string;
 };
+
+const FIXED_ORGANIZATION_ID = "11111111-1111-1111-1111-111111111111";
+const FIXED_USER_ID = "22222222-2222-2222-2222-222222222222";
 
 type DetailFieldProps = {
   label: string;
@@ -266,6 +271,22 @@ export function TicketDetailPageContent({
     setActivity(nextActivity);
   }
 
+  async function handleCommentCreate(content: string) {
+    await createTicketComment(ticketId, {
+      organization_id: FIXED_ORGANIZATION_ID,
+      user_id: FIXED_USER_ID,
+      content,
+    });
+
+    const [nextComments, nextActivity] = await Promise.all([
+      fetchTicketComments(ticketId),
+      fetchTicketActivity(ticketId),
+    ]);
+
+    setComments(nextComments);
+    setActivity(nextActivity);
+  }
+
   const description = ticket?.description.trim()
     ? ticket.description
     : "No description provided for this ticket yet.";
@@ -346,6 +367,12 @@ export function TicketDetailPageContent({
           <TicketAssigneeUpdate
             currentAssigneeId={ticket.assignee_user_id}
             onSubmit={handleAssigneeUpdate}
+          />
+
+          <TicketCommentCreate
+            organizationId={FIXED_ORGANIZATION_ID}
+            userId={FIXED_USER_ID}
+            onSubmit={handleCommentCreate}
           />
 
           <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">

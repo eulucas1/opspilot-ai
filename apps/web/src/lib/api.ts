@@ -1,6 +1,7 @@
 import type {
   TicketActivityEvent,
   TicketComment,
+  TicketCommentCreatePayload,
   TicketCreatePayload,
   TicketDetail,
   TicketFilters,
@@ -129,6 +130,27 @@ export async function fetchTicketComments(
   return (await response.json()) as TicketComment[];
 }
 
+export async function createTicketComment(
+  ticketId: string,
+  payload: TicketCommentCreatePayload,
+  signal?: AbortSignal,
+): Promise<TicketComment> {
+  const response = await fetchFromFrontendApi(
+    `/api/tickets/${ticketId}/comments`,
+    "Failed to create the ticket comment.",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+      signal,
+    },
+  );
+
+  return (await response.json()) as TicketComment;
+}
+
 export async function fetchTicketActivity(
   ticketId: string,
   signal?: AbortSignal,
@@ -252,6 +274,19 @@ export async function proxyTicketDetailRequest(ticketId: string): Promise<Respon
 
 export async function proxyTicketCommentsRequest(ticketId: string): Promise<Response> {
   return proxyApiRequest(`/tickets/${ticketId}/comments`);
+}
+
+export async function proxyCreateTicketCommentRequest(
+  ticketId: string,
+  payload: TicketCommentCreatePayload,
+): Promise<Response> {
+  return proxyApiRequest(`/tickets/${ticketId}/comments`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function proxyTicketActivityRequest(ticketId: string): Promise<Response> {
