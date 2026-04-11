@@ -40,6 +40,22 @@ export interface TicketActivityEvent {
   created_at: string;
 }
 
+export type TicketCreatePriority = "" | TicketPriority;
+
+export interface TicketCreateValues {
+  title: string;
+  description: string;
+  priority: TicketCreatePriority;
+}
+
+export interface TicketCreatePayload {
+  organization_id: string;
+  created_by_user_id: string;
+  title: string;
+  description: string;
+  priority: TicketPriority;
+}
+
 export interface TicketFilters {
   status: TicketStatusFilter;
   priority: TicketPriorityFilter;

@@ -1,6 +1,7 @@
 import type {
   TicketActivityEvent,
   TicketComment,
+  TicketCreatePayload,
   TicketDetail,
   TicketFilters,
   TicketSummary,
@@ -66,11 +67,11 @@ async function buildApiRequestError(
 async function fetchFromFrontendApi(
   path: string,
   fallbackMessage: string,
-  signal?: AbortSignal,
+  init: RequestInit = {},
 ): Promise<Response> {
   const response = await fetch(path, {
-    method: "GET",
-    signal,
+    method: init.method ?? "GET",
+    ...init,
   });
 
   if (!response.ok) {
@@ -87,7 +88,9 @@ export async function fetchTickets(
   const response = await fetchFromFrontendApi(
     `/api/tickets${buildTicketQuery(filters)}`,
     "Failed to load tickets from the API.",
-    signal,
+    {
+      signal,
+    },
   );
 
   return (await response.json()) as TicketSummary[];
@@ -100,7 +103,9 @@ export async function fetchTicketById(
   const response = await fetchFromFrontendApi(
     `/api/tickets/${ticketId}`,
     "Failed to load ticket details from the API.",
-    signal,
+    {
+      signal,
+    },
   );
 
   return (await response.json()) as TicketDetail;
@@ -113,7 +118,9 @@ export async function fetchTicketComments(
   const response = await fetchFromFrontendApi(
     `/api/tickets/${ticketId}/comments`,
     "Failed to load ticket comments from the API.",
-    signal,
+    {
+      signal,
+    },
   );
 
   return (await response.json()) as TicketComment[];
@@ -126,22 +133,47 @@ export async function fetchTicketActivity(
   const response = await fetchFromFrontendApi(
     `/api/tickets/${ticketId}/activity`,
     "Failed to load ticket activity from the API.",
-    signal,
+    {
+      signal,
+    },
   );
 
   return (await response.json()) as TicketActivityEvent[];
 }
 
-async function proxyApiGet(path: string): Promise<Response> {
+export async function createTicket(
+  payload: TicketCreatePayload,
+  signal?: AbortSignal,
+): Promise<TicketDetail> {
+  const response = await fetchFromFrontendApi(
+    "/api/tickets",
+    "Failed to create the ticket.",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+      signal,
+    },
+  );
+
+  return (await response.json()) as TicketDetail;
+}
+
+async function proxyApiRequest(path: string, init: RequestInit = {}): Promise<Response> {
   let lastError: unknown = null;
 
   for (const apiBaseUrl of getApiBaseUrls()) {
     try {
       return await fetch(`${normalizeApiBaseUrl(apiBaseUrl)}${path}`, {
+        method: init.method ?? "GET",
+        ...init,
         headers: {
           Accept: "application/json",
+          ...(init.headers ?? {}),
         },
-        cache: "no-store",
+        ...(init.method && init.method !== "GET" ? {} : { cache: "no-store" }),
       });
     } catch (error) {
       lastError = error;
@@ -162,17 +194,29 @@ async function proxyApiGet(path: string): Promise<Response> {
 }
 
 export async function proxyTicketsRequest(search: string): Promise<Response> {
-  return proxyApiGet(`/tickets${search}`);
+  return proxyApiRequest(`/tickets${search}`);
 }
 
 export async function proxyTicketDetailRequest(ticketId: string): Promise<Response> {
-  return proxyApiGet(`/tickets/${ticketId}`);
+  return proxyApiRequest(`/tickets/${ticketId}`);
 }
 
 export async function proxyTicketCommentsRequest(ticketId: string): Promise<Response> {
-  return proxyApiGet(`/tickets/${ticketId}/comments`);
+  return proxyApiRequest(`/tickets/${ticketId}/comments`);
 }
 
 export async function proxyTicketActivityRequest(ticketId: string): Promise<Response> {
-  return proxyApiGet(`/tickets/${ticketId}/activity`);
+  return proxyApiRequest(`/tickets/${ticketId}/activity`);
+}
+
+export async function proxyCreateTicketRequest(
+  payload: TicketCreatePayload,
+): Promise<Response> {
+  return proxyApiRequest("/tickets", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
 }

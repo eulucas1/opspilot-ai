@@ -113,6 +113,12 @@ export function TicketsPageContent() {
 
           <div className="flex flex-wrap items-center gap-3">
             <Link
+              className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-sand transition hover:bg-[#18324d]"
+              href="/tickets/new"
+            >
+              New ticket
+            </Link>
+            <Link
               className="rounded-full border border-ink/10 px-4 py-2 text-sm font-medium text-ink transition hover:border-copper hover:text-copper"
               href="/"
             >
