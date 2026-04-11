@@ -58,3 +58,11 @@ export function getTicketStatusClasses(status: TicketStatus): string {
 export function getTicketPriorityClasses(priority: TicketPriority): string {
   return priorityStyles[priority];
 }
+
+export function formatTokenLabel(value: string): string {
+  return value
+    .split("_")
+    .filter(Boolean)
+    .map((token) => token.charAt(0).toUpperCase() + token.slice(1))
+    .join(" ");
+}

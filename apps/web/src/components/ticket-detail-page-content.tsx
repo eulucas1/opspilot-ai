@@ -3,7 +3,12 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { ApiRequestError, fetchTicketById } from "@/lib/api";
+import {
+  ApiRequestError,
+  fetchTicketActivity,
+  fetchTicketById,
+  fetchTicketComments,
+} from "@/lib/api";
 import {
   formatTicketDate,
   formatTicketPriorityLabel,
@@ -11,7 +16,13 @@ import {
   getTicketPriorityClasses,
   getTicketStatusClasses,
 } from "@/lib/ticket-display";
-import type { TicketDetail } from "@/types";
+import { TicketActivitySection } from "@/components/ticket-activity-section";
+import { TicketCommentsSection } from "@/components/ticket-comments-section";
+import type {
+  TicketActivityEvent,
+  TicketComment,
+  TicketDetail,
+} from "@/types";
 
 type TicketDetailPageContentProps = {
   ticketId: string;
@@ -34,7 +45,7 @@ function LoadingState() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
+      <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="animate-pulse rounded-[1.75rem] border border-ink/10 bg-white/75 p-6 shadow-soft">
           <div className="h-4 w-24 rounded-full bg-ink/10" />
           <div className="mt-5 h-4 w-full rounded-full bg-ink/10" />
@@ -45,13 +56,24 @@ function LoadingState() {
         <div className="animate-pulse rounded-[1.75rem] border border-ink/10 bg-white/75 p-6 shadow-soft">
           <div className="h-4 w-24 rounded-full bg-ink/10" />
           <div className="mt-5 space-y-4">
-            {Array.from({ length: 5 }).map((_, index) => (
+            {Array.from({ length: 6 }).map((_, index) => (
               <div key={`detail-field-skeleton-${index}`}>
                 <div className="h-3 w-24 rounded-full bg-ink/10" />
                 <div className="mt-2 h-4 w-full rounded-full bg-ink/10" />
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="animate-pulse rounded-[1.75rem] border border-ink/10 bg-white/75 p-6 shadow-soft">
+          <div className="h-4 w-24 rounded-full bg-ink/10" />
+          <div className="mt-6 h-24 rounded-[1.25rem] bg-ink/10" />
+        </div>
+        <div className="animate-pulse rounded-[1.75rem] border border-ink/10 bg-white/75 p-6 shadow-soft">
+          <div className="h-4 w-24 rounded-full bg-ink/10" />
+          <div className="mt-6 h-24 rounded-[1.25rem] bg-ink/10" />
         </div>
       </div>
     </div>
@@ -116,9 +138,11 @@ function NotFoundState({ ticketId }: { ticketId: string }) {
 
 function DetailField({ label, value }: DetailFieldProps) {
   return (
-    <div className="rounded-2xl border border-ink/10 bg-sand/55 p-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink/45">{label}</p>
-      <p className="mt-2 break-all text-sm font-medium leading-7 text-ink">{value}</p>
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-mist/70">
+        {label}
+      </p>
+      <p className="mt-2 break-all text-sm font-medium leading-7 text-sand">{value}</p>
     </div>
   );
 }
@@ -158,6 +182,8 @@ export function TicketDetailPageContent({
   ticketId,
 }: TicketDetailPageContentProps) {
   const [ticket, setTicket] = useState<TicketDetail | null>(null);
+  const [comments, setComments] = useState<TicketComment[]>([]);
+  const [activity, setActivity] = useState<TicketActivityEvent[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isNotFound, setIsNotFound] = useState(false);
@@ -166,7 +192,7 @@ export function TicketDetailPageContent({
   useEffect(() => {
     const abortController = new AbortController();
 
-    async function loadTicket() {
+    async function loadTicketDetails() {
       setIsLoading(true);
       setErrorMessage(null);
       setIsNotFound(false);
@@ -178,7 +204,18 @@ export function TicketDetailPageContent({
           return;
         }
 
+        const [nextComments, nextActivity] = await Promise.all([
+          fetchTicketComments(ticketId, abortController.signal),
+          fetchTicketActivity(ticketId, abortController.signal),
+        ]);
+
+        if (abortController.signal.aborted) {
+          return;
+        }
+
         setTicket(nextTicket);
+        setComments(nextComments);
+        setActivity(nextActivity);
       } catch (error) {
         if (abortController.signal.aborted) {
           return;
@@ -186,6 +223,8 @@ export function TicketDetailPageContent({
 
         const normalizedError = normalizeTicketError(error);
         setTicket(null);
+        setComments([]);
+        setActivity([]);
         setIsNotFound(normalizedError.isNotFound);
         setErrorMessage(normalizedError.isNotFound ? null : normalizedError.message);
       } finally {
@@ -195,7 +234,7 @@ export function TicketDetailPageContent({
       }
     }
 
-    void loadTicket();
+    void loadTicketDetails();
 
     return () => {
       abortController.abort();
@@ -220,13 +259,11 @@ export function TicketDetailPageContent({
               Ticket Detail
             </p>
             <h1 className="mt-3 text-4xl font-semibold tracking-tight text-ink sm:text-5xl">
-              {isLoading
-                ? "Loading ticket..."
-                : ticket?.title || "Ticket detail"}
+              {isLoading ? "Loading ticket..." : ticket?.title || "Ticket detail"}
             </h1>
             <p className="mt-4 max-w-3xl text-lg leading-8 text-ink/75">
-              Detailed view powered by the real <span className="font-semibold">GET /tickets/{"{ticket_id}"}</span>{" "}
-              endpoint.
+              Detailed view powered by the real ticket, comments and activity endpoints
+              from the OpsPilot AI backend.
             </p>
           </div>
 
@@ -280,7 +317,7 @@ export function TicketDetailPageContent({
             </div>
           </section>
 
-          <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+          <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
             <article className="rounded-[1.75rem] border border-ink/10 bg-white/75 p-6 shadow-soft">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-copper">
                 Description
@@ -304,6 +341,11 @@ export function TicketDetailPageContent({
               </div>
             </aside>
           </section>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <TicketCommentsSection comments={comments} />
+            <TicketActivitySection activity={activity} />
+          </div>
         </div>
       ) : null}
     </main>
