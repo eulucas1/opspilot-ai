@@ -60,6 +60,10 @@ export interface TicketStatusUpdatePayload {
   status: TicketStatus;
 }
 
+export interface TicketAssigneeUpdatePayload {
+  assignee_user_id: string;
+}
+
 export interface TicketFilters {
   status: TicketStatusFilter;
   priority: TicketPriorityFilter;
