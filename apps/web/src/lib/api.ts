@@ -4,6 +4,7 @@ import type {
   TicketCreatePayload,
   TicketDetail,
   TicketFilters,
+  TicketAssigneeUpdatePayload,
   TicketStatus,
   TicketStatusUpdatePayload,
   TicketSummary,
@@ -186,6 +187,29 @@ export async function updateTicketStatus(
   return (await response.json()) as TicketDetail;
 }
 
+export async function updateTicketAssignee(
+  ticketId: string,
+  assigneeUserId: string,
+  signal?: AbortSignal,
+): Promise<TicketDetail> {
+  const payload: TicketAssigneeUpdatePayload = { assignee_user_id: assigneeUserId };
+
+  const response = await fetchFromFrontendApi(
+    `/api/tickets/${ticketId}/assignee`,
+    "Failed to update the ticket assignee.",
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+      signal,
+    },
+  );
+
+  return (await response.json()) as TicketDetail;
+}
+
 async function proxyApiRequest(path: string, init: RequestInit = {}): Promise<Response> {
   let lastError: unknown = null;
 
@@ -251,6 +275,19 @@ export async function proxyUpdateTicketStatusRequest(
   payload: TicketStatusUpdatePayload,
 ): Promise<Response> {
   return proxyApiRequest(`/tickets/${ticketId}/status`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function proxyUpdateTicketAssigneeRequest(
+  ticketId: string,
+  payload: TicketAssigneeUpdatePayload,
+): Promise<Response> {
+  return proxyApiRequest(`/tickets/${ticketId}/assignee`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",

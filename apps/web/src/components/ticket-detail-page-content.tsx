@@ -8,6 +8,7 @@ import {
   fetchTicketActivity,
   fetchTicketById,
   fetchTicketComments,
+  updateTicketAssignee,
   updateTicketStatus,
 } from "@/lib/api";
 import {
@@ -18,6 +19,7 @@ import {
   getTicketStatusClasses,
 } from "@/lib/ticket-display";
 import { TicketActivitySection } from "@/components/ticket-activity-section";
+import { TicketAssigneeUpdate } from "@/components/ticket-assignee-update";
 import { TicketCommentsSection } from "@/components/ticket-comments-section";
 import { TicketStatusUpdate } from "@/components/ticket-status-update";
 import type {
@@ -256,6 +258,14 @@ export function TicketDetailPageContent({
     setActivity(nextActivity);
   }
 
+  async function handleAssigneeUpdate(nextAssigneeId: string) {
+    const updatedTicket = await updateTicketAssignee(ticketId, nextAssigneeId);
+    const nextActivity = await fetchTicketActivity(ticketId);
+
+    setTicket(updatedTicket);
+    setActivity(nextActivity);
+  }
+
   const description = ticket?.description.trim()
     ? ticket.description
     : "No description provided for this ticket yet.";
@@ -331,6 +341,11 @@ export function TicketDetailPageContent({
           <TicketStatusUpdate
             currentStatus={ticket.status}
             onSubmit={handleStatusUpdate}
+          />
+
+          <TicketAssigneeUpdate
+            currentAssigneeId={ticket.assignee_user_id}
+            onSubmit={handleAssigneeUpdate}
           />
 
           <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
