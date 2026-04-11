@@ -4,6 +4,8 @@ import type {
   TicketCreatePayload,
   TicketDetail,
   TicketFilters,
+  TicketStatus,
+  TicketStatusUpdatePayload,
   TicketSummary,
 } from "@/types";
 
@@ -161,6 +163,29 @@ export async function createTicket(
   return (await response.json()) as TicketDetail;
 }
 
+export async function updateTicketStatus(
+  ticketId: string,
+  status: TicketStatus,
+  signal?: AbortSignal,
+): Promise<TicketDetail> {
+  const payload: TicketStatusUpdatePayload = { status };
+
+  const response = await fetchFromFrontendApi(
+    `/api/tickets/${ticketId}/status`,
+    "Failed to update the ticket status.",
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+      signal,
+    },
+  );
+
+  return (await response.json()) as TicketDetail;
+}
+
 async function proxyApiRequest(path: string, init: RequestInit = {}): Promise<Response> {
   let lastError: unknown = null;
 
@@ -214,6 +239,19 @@ export async function proxyCreateTicketRequest(
 ): Promise<Response> {
   return proxyApiRequest("/tickets", {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function proxyUpdateTicketStatusRequest(
+  ticketId: string,
+  payload: TicketStatusUpdatePayload,
+): Promise<Response> {
+  return proxyApiRequest(`/tickets/${ticketId}/status`, {
+    method: "PATCH",
     headers: {
       "Content-Type": "application/json",
     },

@@ -8,6 +8,7 @@ import {
   fetchTicketActivity,
   fetchTicketById,
   fetchTicketComments,
+  updateTicketStatus,
 } from "@/lib/api";
 import {
   formatTicketDate,
@@ -18,10 +19,12 @@ import {
 } from "@/lib/ticket-display";
 import { TicketActivitySection } from "@/components/ticket-activity-section";
 import { TicketCommentsSection } from "@/components/ticket-comments-section";
+import { TicketStatusUpdate } from "@/components/ticket-status-update";
 import type {
   TicketActivityEvent,
   TicketComment,
   TicketDetail,
+  TicketStatus,
 } from "@/types";
 
 type TicketDetailPageContentProps = {
@@ -245,6 +248,14 @@ export function TicketDetailPageContent({
     setRequestVersion((currentVersion) => currentVersion + 1);
   }
 
+  async function handleStatusUpdate(nextStatus: TicketStatus) {
+    const updatedTicket = await updateTicketStatus(ticketId, nextStatus);
+    const nextActivity = await fetchTicketActivity(ticketId);
+
+    setTicket(updatedTicket);
+    setActivity(nextActivity);
+  }
+
   const description = ticket?.description.trim()
     ? ticket.description
     : "No description provided for this ticket yet.";
@@ -316,6 +327,11 @@ export function TicketDetailPageContent({
               </div>
             </div>
           </section>
+
+          <TicketStatusUpdate
+            currentStatus={ticket.status}
+            onSubmit={handleStatusUpdate}
+          />
 
           <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
             <article className="rounded-[1.75rem] border border-ink/10 bg-white/75 p-6 shadow-soft">
