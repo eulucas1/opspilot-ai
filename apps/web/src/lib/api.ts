@@ -1,4 +1,10 @@
-import type { TicketDetail, TicketFilters, TicketSummary } from "@/types";
+import type {
+  TicketActivityEvent,
+  TicketComment,
+  TicketDetail,
+  TicketFilters,
+  TicketSummary,
+} from "@/types";
 
 const DEFAULT_API_BASE_URLS = ["http://localhost:8000", "http://api:8000"] as const;
 
@@ -100,6 +106,32 @@ export async function fetchTicketById(
   return (await response.json()) as TicketDetail;
 }
 
+export async function fetchTicketComments(
+  ticketId: string,
+  signal?: AbortSignal,
+): Promise<TicketComment[]> {
+  const response = await fetchFromFrontendApi(
+    `/api/tickets/${ticketId}/comments`,
+    "Failed to load ticket comments from the API.",
+    signal,
+  );
+
+  return (await response.json()) as TicketComment[];
+}
+
+export async function fetchTicketActivity(
+  ticketId: string,
+  signal?: AbortSignal,
+): Promise<TicketActivityEvent[]> {
+  const response = await fetchFromFrontendApi(
+    `/api/tickets/${ticketId}/activity`,
+    "Failed to load ticket activity from the API.",
+    signal,
+  );
+
+  return (await response.json()) as TicketActivityEvent[];
+}
+
 async function proxyApiGet(path: string): Promise<Response> {
   let lastError: unknown = null;
 
@@ -135,4 +167,12 @@ export async function proxyTicketsRequest(search: string): Promise<Response> {
 
 export async function proxyTicketDetailRequest(ticketId: string): Promise<Response> {
   return proxyApiGet(`/tickets/${ticketId}`);
+}
+
+export async function proxyTicketCommentsRequest(ticketId: string): Promise<Response> {
+  return proxyApiGet(`/tickets/${ticketId}/comments`);
+}
+
+export async function proxyTicketActivityRequest(ticketId: string): Promise<Response> {
+  return proxyApiGet(`/tickets/${ticketId}/activity`);
 }
