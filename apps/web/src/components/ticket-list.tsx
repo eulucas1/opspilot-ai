@@ -1,4 +1,13 @@
-import type { TicketPriority, TicketSummary, TicketStatus } from "@/types";
+import Link from "next/link";
+
+import type { TicketSummary } from "@/types";
+import {
+  formatTicketDate,
+  formatTicketPriorityLabel,
+  formatTicketStatusLabel,
+  getTicketPriorityClasses,
+  getTicketStatusClasses,
+} from "@/lib/ticket-display";
 
 type TicketListProps = {
   errorMessage: string | null;
@@ -8,53 +17,6 @@ type TicketListProps = {
   onRetry: () => void;
   tickets: TicketSummary[];
 };
-
-const statusStyles: Record<TicketStatus, string> = {
-  open: "bg-amber-100 text-amber-800",
-  in_progress: "bg-sky-100 text-sky-800",
-  resolved: "bg-emerald-100 text-emerald-800",
-  closed: "bg-slate-200 text-slate-700",
-};
-
-const priorityStyles: Record<TicketPriority, string> = {
-  low: "bg-slate-100 text-slate-700",
-  medium: "bg-orange-100 text-orange-800",
-  high: "bg-rose-100 text-rose-800",
-};
-
-const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-});
-
-function formatStatusLabel(status: TicketStatus): string {
-  switch (status) {
-    case "in_progress":
-      return "In Progress";
-    case "resolved":
-      return "Resolved";
-    case "closed":
-      return "Closed";
-    case "open":
-    default:
-      return "Open";
-  }
-}
-
-function formatPriorityLabel(priority: TicketPriority): string {
-  switch (priority) {
-    case "high":
-      return "High";
-    case "low":
-      return "Low";
-    case "medium":
-    default:
-      return "Medium";
-  }
-}
 
 function LoadingState() {
   return (
@@ -166,24 +128,40 @@ export function TicketList({
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-copper">
                 Ticket
               </p>
-              <h3 className="mt-2 text-xl font-semibold text-ink">{ticket.title}</h3>
+              <h3 className="mt-2 text-xl font-semibold text-ink">
+                <Link
+                  className="transition hover:text-copper"
+                  href={`/tickets/${ticket.id}`}
+                >
+                  {ticket.title}
+                </Link>
+              </h3>
               <p className="mt-3 text-sm leading-7 text-ink/65">
-                Created on {dateFormatter.format(new Date(ticket.created_at))}
+                Created on {formatTicketDate(ticket.created_at)}
               </p>
             </div>
 
             <div className="flex flex-wrap gap-2">
               <span
-                className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] ${statusStyles[ticket.status]}`}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] ${getTicketStatusClasses(ticket.status)}`}
               >
-                {formatStatusLabel(ticket.status)}
+                {formatTicketStatusLabel(ticket.status)}
               </span>
               <span
-                className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] ${priorityStyles[ticket.priority]}`}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] ${getTicketPriorityClasses(ticket.priority)}`}
               >
-                {formatPriorityLabel(ticket.priority)}
+                {formatTicketPriorityLabel(ticket.priority)}
               </span>
             </div>
+          </div>
+
+          <div className="mt-5 flex justify-end">
+            <Link
+              className="rounded-full border border-ink/10 px-4 py-2 text-sm font-medium text-ink transition hover:border-copper hover:text-copper"
+              href={`/tickets/${ticket.id}`}
+            >
+              View details
+            </Link>
           </div>
         </article>
       ))}

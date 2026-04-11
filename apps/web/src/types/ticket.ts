@@ -17,6 +17,8 @@ export interface TicketSummary {
   updated_at: string;
 }
 
+export type TicketDetail = TicketSummary;
+
 export interface TicketFilters {
   status: TicketStatusFilter;
   priority: TicketPriorityFilter;
