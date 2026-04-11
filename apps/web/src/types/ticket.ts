@@ -29,6 +29,12 @@ export interface TicketComment {
   updated_at: string;
 }
 
+export interface TicketCommentCreatePayload {
+  organization_id: string;
+  user_id: string;
+  content: string;
+}
+
 export interface TicketActivityEvent {
   id: string;
   organization_id: string;
