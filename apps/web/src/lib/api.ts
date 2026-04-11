@@ -1,6 +1,16 @@
-import type { TicketFilters, TicketSummary } from "@/types";
+import type { TicketDetail, TicketFilters, TicketSummary } from "@/types";
 
 const DEFAULT_API_BASE_URLS = ["http://localhost:8000", "http://api:8000"] as const;
+
+export class ApiRequestError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = "ApiRequestError";
+    this.status = status;
+  }
+}
 
 function buildTicketQuery(filters: TicketFilters): string {
   const searchParams = new URLSearchParams();
@@ -25,39 +35,77 @@ function getApiBaseUrls(): string[] {
     .filter((value, index, values) => values.indexOf(value) === index);
 }
 
-export async function fetchTickets(
-  filters: TicketFilters,
+function normalizeApiBaseUrl(apiBaseUrl: string): string {
+  return apiBaseUrl.replace(/\/+$/, "");
+}
+
+async function buildApiRequestError(
+  response: Response,
+  fallbackMessage: string,
+): Promise<ApiRequestError> {
+  let errorMessage = fallbackMessage;
+
+  try {
+    const errorPayload = (await response.json()) as { detail?: string };
+    if (errorPayload.detail) {
+      errorMessage = errorPayload.detail;
+    }
+  } catch {
+    // Keep the fallback error message when the response is not JSON.
+  }
+
+  return new ApiRequestError(response.status, errorMessage);
+}
+
+async function fetchFromFrontendApi(
+  path: string,
+  fallbackMessage: string,
   signal?: AbortSignal,
-): Promise<TicketSummary[]> {
-  const response = await fetch(`/api/tickets${buildTicketQuery(filters)}`, {
+): Promise<Response> {
+  const response = await fetch(path, {
     method: "GET",
     signal,
   });
 
   if (!response.ok) {
-    let errorMessage = "Failed to load tickets from the API.";
-
-    try {
-      const errorPayload = (await response.json()) as { detail?: string };
-      if (errorPayload.detail) {
-        errorMessage = errorPayload.detail;
-      }
-    } catch {
-      // Keep the generic error message when the response is not JSON.
-    }
-
-    throw new Error(errorMessage);
+    throw await buildApiRequestError(response, fallbackMessage);
   }
+
+  return response;
+}
+
+export async function fetchTickets(
+  filters: TicketFilters,
+  signal?: AbortSignal,
+): Promise<TicketSummary[]> {
+  const response = await fetchFromFrontendApi(
+    `/api/tickets${buildTicketQuery(filters)}`,
+    "Failed to load tickets from the API.",
+    signal,
+  );
 
   return (await response.json()) as TicketSummary[];
 }
 
-export async function proxyTicketsRequest(search: string): Promise<Response> {
+export async function fetchTicketById(
+  ticketId: string,
+  signal?: AbortSignal,
+): Promise<TicketDetail> {
+  const response = await fetchFromFrontendApi(
+    `/api/tickets/${ticketId}`,
+    "Failed to load ticket details from the API.",
+    signal,
+  );
+
+  return (await response.json()) as TicketDetail;
+}
+
+async function proxyApiGet(path: string): Promise<Response> {
   let lastError: unknown = null;
 
   for (const apiBaseUrl of getApiBaseUrls()) {
     try {
-      return await fetch(`${apiBaseUrl}/tickets${search}`, {
+      return await fetch(`${normalizeApiBaseUrl(apiBaseUrl)}${path}`, {
         headers: {
           Accept: "application/json",
         },
@@ -79,4 +127,12 @@ export async function proxyTicketsRequest(search: string): Promise<Response> {
       "content-type": "application/json",
     },
   });
+}
+
+export async function proxyTicketsRequest(search: string): Promise<Response> {
+  return proxyApiGet(`/tickets${search}`);
+}
+
+export async function proxyTicketDetailRequest(ticketId: string): Promise<Response> {
+  return proxyApiGet(`/tickets/${ticketId}`);
 }
