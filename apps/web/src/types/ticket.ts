@@ -56,6 +56,10 @@ export interface TicketCreatePayload {
   priority: TicketPriority;
 }
 
+export interface TicketStatusUpdatePayload {
+  status: TicketStatus;
+}
+
 export interface TicketFilters {
   status: TicketStatusFilter;
   priority: TicketPriorityFilter;
