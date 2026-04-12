@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { TicketFilters } from "@/components/ticket-filters";
@@ -18,6 +19,15 @@ const defaultFilters: TicketFiltersValues = {
   priority: "",
 };
 
+const statusValues: TicketStatusFilter[] = [
+  "",
+  "open",
+  "in_progress",
+  "resolved",
+  "closed",
+];
+const priorityValues: TicketPriorityFilter[] = ["", "low", "medium", "high"];
+
 function extractErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message) {
     return error.message;
@@ -27,6 +37,8 @@ function extractErrorMessage(error: unknown): string {
 }
 
 export function TicketsPageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [filters, setFilters] = useState<TicketFiltersValues>(defaultFilters);
   const [tickets, setTickets] = useState<TicketSummary[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -70,6 +82,55 @@ export function TicketsPageContent() {
       abortController.abort();
     };
   }, [filters, requestVersion]);
+
+  useEffect(() => {
+    const nextStatus = searchParams?.get("status") ?? "";
+    const nextPriority = searchParams?.get("priority") ?? "";
+
+    const normalizedStatus = statusValues.includes(nextStatus as TicketStatusFilter)
+      ? (nextStatus as TicketStatusFilter)
+      : "";
+    const normalizedPriority = priorityValues.includes(
+      nextPriority as TicketPriorityFilter,
+    )
+      ? (nextPriority as TicketPriorityFilter)
+      : "";
+
+    setFilters((currentFilters) => {
+      if (
+        currentFilters.status === normalizedStatus &&
+        currentFilters.priority === normalizedPriority
+      ) {
+        return currentFilters;
+      }
+
+      return {
+        status: normalizedStatus,
+        priority: normalizedPriority,
+      };
+    });
+  }, [searchParams]);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+
+    if (filters.status) {
+      params.set("status", filters.status);
+    }
+
+    if (filters.priority) {
+      params.set("priority", filters.priority);
+    }
+
+    const queryString = params.toString();
+    const nextUrl = queryString ? `/tickets?${queryString}` : "/tickets";
+    const currentQuery = searchParams?.toString() ?? "";
+    const currentUrl = currentQuery ? `/tickets?${currentQuery}` : "/tickets";
+
+    if (nextUrl !== currentUrl) {
+      router.replace(nextUrl, { scroll: false });
+    }
+  }, [filters, router, searchParams]);
 
   function updateStatusFilter(status: TicketStatusFilter) {
     setFilters((currentFilters) => ({
