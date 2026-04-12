@@ -6,6 +6,7 @@ import { startTransition, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
 import { ApiRequestError, createTicket } from "@/lib/api";
+import { useFeedback } from "@/components/feedback-provider";
 import type {
   TicketCreatePayload,
   TicketCreatePriority,
@@ -61,6 +62,7 @@ function buildPayload(values: TicketCreateValues): TicketCreatePayload {
 
 export function NewTicketPageContent() {
   const router = useRouter();
+  const feedback = useFeedback();
   const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [values, setValues] = useState<TicketCreateValues>(defaultValues);
@@ -110,6 +112,7 @@ export function NewTicketPageContent() {
       setFieldErrors(nextErrors);
       setFormError("Please fix the highlighted fields before submitting.");
       setSubmissionState("error");
+      feedback.error("Please fix required fields before creating the ticket.");
       return;
     }
 
@@ -121,6 +124,7 @@ export function NewTicketPageContent() {
       const createdTicket = await createTicket(buildPayload(values));
 
       setSubmissionState("success");
+      feedback.success("Ticket created. Redirecting to the detail page.");
       redirectTimeoutRef.current = setTimeout(() => {
         startTransition(() => {
           router.push(`/tickets/${createdTicket.id}`);
@@ -136,6 +140,7 @@ export function NewTicketPageContent() {
 
       setSubmissionState("error");
       setFormError(errorMessage);
+      feedback.error(errorMessage);
     }
   }
 

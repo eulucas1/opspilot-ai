@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { useFeedback } from "@/components/feedback-provider";
 import type { TicketStatus } from "@/types";
 import { formatTicketStatusLabel } from "@/lib/ticket-display";
 
@@ -21,6 +22,7 @@ export function TicketStatusUpdate({
   currentStatus,
   onSubmit,
 }: TicketStatusUpdateProps) {
+  const feedback = useFeedback();
   const [selectedStatus, setSelectedStatus] = useState<TicketStatus>(currentStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -35,6 +37,7 @@ export function TicketStatusUpdate({
     if (selectedStatus === currentStatus) {
       setErrorMessage("Choose a different status before submitting.");
       setSuccessMessage(null);
+      feedback.info("Select a different status to continue.");
       return;
     }
 
@@ -45,6 +48,7 @@ export function TicketStatusUpdate({
     try {
       await onSubmit(selectedStatus);
       setSuccessMessage("Status updated successfully.");
+      feedback.success("Ticket status updated.");
     } catch (error) {
       const nextErrorMessage =
         error instanceof Error && error.message
@@ -52,6 +56,7 @@ export function TicketStatusUpdate({
           : "Failed to update the ticket status.";
 
       setErrorMessage(nextErrorMessage);
+      feedback.error(nextErrorMessage);
     } finally {
       setIsSubmitting(false);
     }
