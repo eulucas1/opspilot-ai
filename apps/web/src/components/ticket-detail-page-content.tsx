@@ -41,6 +41,7 @@ const FIXED_USER_ID = "22222222-2222-2222-2222-222222222222";
 type DetailFieldProps = {
   label: string;
   value: string;
+  tone?: "default" | "muted";
 };
 
 function LoadingState() {
@@ -146,13 +147,18 @@ function NotFoundState({ ticketId }: { ticketId: string }) {
   );
 }
 
-function DetailField({ label, value }: DetailFieldProps) {
+function DetailField({ label, value, tone = "default" }: DetailFieldProps) {
+  const valueClass =
+    tone === "muted" ? "text-mist/70" : "text-sand";
+
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-mist/70">
         {label}
       </p>
-      <p className="mt-2 break-all text-sm font-medium leading-7 text-sand">{value}</p>
+      <p className={`mt-2 break-all text-sm font-medium leading-7 ${valueClass}`}>
+        {value}
+      </p>
     </div>
   );
 }
@@ -291,13 +297,14 @@ export function TicketDetailPageContent({
     ? ticket.description
     : "No description provided for this ticket yet.";
   const assigneeUserId = ticket?.assignee_user_id ?? "Not assigned yet";
+  const assigneeTone = ticket?.assignee_user_id ? "default" : "muted";
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-8 px-6 py-8 sm:px-10 lg:px-12">
-      <section className="rounded-[2rem] border border-ink/10 bg-white/80 px-6 py-8 shadow-soft backdrop-blur sm:px-10">
+      <section className="rounded-[2.25rem] border border-ink/10 bg-gradient-to-br from-white via-white to-sand/50 px-6 py-8 shadow-soft backdrop-blur sm:px-10">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-copper">
+            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-copper">
               Ticket Detail
             </p>
             <h1 className="mt-3 text-4xl font-semibold tracking-tight text-ink sm:text-5xl">
@@ -307,11 +314,28 @@ export function TicketDetailPageContent({
               Detailed view powered by the real ticket, comments and activity endpoints
               from the OpsPilot AI backend.
             </p>
+            {!isLoading && ticket ? (
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <span
+                  className={`rounded-full border border-white/70 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] ${getTicketStatusClasses(ticket.status)}`}
+                >
+                  {formatTicketStatusLabel(ticket.status)}
+                </span>
+                <span
+                  className={`rounded-full border border-white/70 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] ${getTicketPriorityClasses(ticket.priority)}`}
+                >
+                  {formatTicketPriorityLabel(ticket.priority)}
+                </span>
+                <span className="rounded-full border border-ink/10 bg-white/70 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-ink/60">
+                  Created {formatTicketDate(ticket.created_at)}
+                </span>
+              </div>
+            ) : null}
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             <Link
-              className="rounded-full border border-ink/10 px-4 py-2 text-sm font-medium text-ink transition hover:border-copper hover:text-copper"
+              className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-sand transition hover:bg-[#18324d]"
               href="/tickets"
             >
               Back to tickets
@@ -333,7 +357,7 @@ export function TicketDetailPageContent({
       ) : null}
 
       {!isLoading && !errorMessage && !isNotFound && ticket ? (
-        <div className="space-y-6">
+        <div className="space-y-8">
           <section className="rounded-[1.75rem] border border-ink/10 bg-white/80 p-6 shadow-soft backdrop-blur">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
               <div>
@@ -346,12 +370,12 @@ export function TicketDetailPageContent({
 
               <div className="flex flex-wrap gap-2">
                 <span
-                  className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] ${getTicketStatusClasses(ticket.status)}`}
+                  className={`rounded-full border border-white/70 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] ${getTicketStatusClasses(ticket.status)}`}
                 >
                   {formatTicketStatusLabel(ticket.status)}
                 </span>
                 <span
-                  className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] ${getTicketPriorityClasses(ticket.priority)}`}
+                  className={`rounded-full border border-white/70 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] ${getTicketPriorityClasses(ticket.priority)}`}
                 >
                   {formatTicketPriorityLabel(ticket.priority)}
                 </span>
@@ -359,21 +383,40 @@ export function TicketDetailPageContent({
             </div>
           </section>
 
-          <TicketStatusUpdate
-            currentStatus={ticket.status}
-            onSubmit={handleStatusUpdate}
-          />
+          <section className="rounded-[1.75rem] border border-ink/10 bg-white/70 p-6 shadow-soft backdrop-blur">
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-copper">
+                  Actions
+                </p>
+                <h3 className="mt-2 text-2xl font-semibold text-ink">
+                  Keep the ticket moving
+                </h3>
+                <p className="mt-2 max-w-2xl text-sm leading-7 text-ink/70">
+                  Update the status, assign an owner, and leave a comment without
+                  leaving this page.
+                </p>
+              </div>
+            </div>
 
-          <TicketAssigneeUpdate
-            currentAssigneeId={ticket.assignee_user_id}
-            onSubmit={handleAssigneeUpdate}
-          />
+            <div className="mt-6 grid gap-6 xl:grid-cols-3">
+              <TicketStatusUpdate
+                currentStatus={ticket.status}
+                onSubmit={handleStatusUpdate}
+              />
 
-          <TicketCommentCreate
-            organizationId={FIXED_ORGANIZATION_ID}
-            userId={FIXED_USER_ID}
-            onSubmit={handleCommentCreate}
-          />
+              <TicketAssigneeUpdate
+                currentAssigneeId={ticket.assignee_user_id}
+                onSubmit={handleAssigneeUpdate}
+              />
+
+              <TicketCommentCreate
+                organizationId={FIXED_ORGANIZATION_ID}
+                userId={FIXED_USER_ID}
+                onSubmit={handleCommentCreate}
+              />
+            </div>
+          </section>
 
           <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
             <article className="rounded-[1.75rem] border border-ink/10 bg-white/75 p-6 shadow-soft">
@@ -393,7 +436,11 @@ export function TicketDetailPageContent({
                 <DetailField label="Ticket ID" value={ticket.id} />
                 <DetailField label="Organization ID" value={ticket.organization_id} />
                 <DetailField label="Created By User ID" value={ticket.created_by_user_id} />
-                <DetailField label="Assignee User ID" value={assigneeUserId} />
+                <DetailField
+                  label="Assignee User ID"
+                  tone={assigneeTone}
+                  value={assigneeUserId}
+                />
                 <DetailField label="Created At" value={formatTicketDate(ticket.created_at)} />
                 <DetailField label="Updated At" value={formatTicketDate(ticket.updated_at)} />
               </div>

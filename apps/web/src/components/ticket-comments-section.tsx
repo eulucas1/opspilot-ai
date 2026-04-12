@@ -9,8 +9,8 @@ export function TicketCommentsSection({
   comments,
 }: TicketCommentsSectionProps) {
   return (
-    <section className="rounded-[1.75rem] border border-ink/10 bg-white/75 p-6 shadow-soft">
-      <div className="flex items-center justify-between gap-4">
+    <section className="rounded-[1.75rem] border border-ink/10 bg-white/80 p-6 shadow-soft backdrop-blur">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-copper">
             Comments
@@ -18,8 +18,11 @@ export function TicketCommentsSection({
           <h3 className="mt-2 text-2xl font-semibold text-ink">
             Ticket discussion
           </h3>
+          <p className="mt-2 text-sm leading-7 text-ink/70">
+            Capture operational context and decisions as the ticket evolves.
+          </p>
         </div>
-        <div className="rounded-full bg-sand px-4 py-2 text-sm font-medium text-ink">
+        <div className="rounded-full border border-ink/10 bg-sand/60 px-4 py-2 text-sm font-medium text-ink">
           {comments.length} comment(s)
         </div>
       </div>
