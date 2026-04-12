@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { TicketFilters } from "@/components/ticket-filters";
 import { TicketList } from "@/components/ticket-list";
+import { TicketSummaryCards } from "@/components/ticket-summary-cards";
 import { fetchTickets } from "@/lib/api";
 import type {
   TicketFilters as TicketFiltersValues,
@@ -198,6 +199,13 @@ export function TicketsPageContent() {
         onPriorityChange={updatePriorityFilter}
         onReset={resetFilters}
         onStatusChange={updateStatusFilter}
+      />
+
+      <TicketSummaryCards
+        hasActiveFilters={hasActiveFilters}
+        hasError={Boolean(errorMessage)}
+        isLoading={isLoading}
+        tickets={tickets}
       />
 
       <section className="space-y-4">
