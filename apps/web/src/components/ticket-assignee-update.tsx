@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { useFeedback } from "@/components/feedback-provider";
+
 type AssigneeOption = {
   label: string;
   value: string;
@@ -29,6 +31,7 @@ export function TicketAssigneeUpdate({
   currentAssigneeId,
   onSubmit,
 }: TicketAssigneeUpdateProps) {
+  const feedback = useFeedback();
   const normalizedCurrentAssignee = currentAssigneeId ?? "unassigned";
   const [selectedAssignee, setSelectedAssignee] = useState(normalizedCurrentAssignee);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,12 +52,14 @@ export function TicketAssigneeUpdate({
     if (isVisualOnly) {
       setErrorMessage("Unassigned is visual-only for now.");
       setSuccessMessage(null);
+      feedback.info("Unassigned is visual-only in this initial version.");
       return;
     }
 
     if (isSameAssignee) {
       setErrorMessage("Choose a different assignee before submitting.");
       setSuccessMessage(null);
+      feedback.info("Select a different assignee to continue.");
       return;
     }
 
@@ -65,6 +70,7 @@ export function TicketAssigneeUpdate({
     try {
       await onSubmit(selectedAssignee);
       setSuccessMessage("Assignee updated successfully.");
+      feedback.success("Ticket assignee updated.");
     } catch (error) {
       const nextErrorMessage =
         error instanceof Error && error.message
@@ -72,6 +78,7 @@ export function TicketAssigneeUpdate({
           : "Failed to update the ticket assignee.";
 
       setErrorMessage(nextErrorMessage);
+      feedback.error(nextErrorMessage);
     } finally {
       setIsSubmitting(false);
     }

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { useFeedback } from "@/components/feedback-provider";
+
 type TicketCommentCreateProps = {
   organizationId: string;
   userId: string;
@@ -13,6 +15,7 @@ export function TicketCommentCreate({
   userId,
   onSubmit,
 }: TicketCommentCreateProps) {
+  const feedback = useFeedback();
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -25,6 +28,7 @@ export function TicketCommentCreate({
     if (isContentEmpty) {
       setErrorMessage("Comment content is required.");
       setSuccessMessage(null);
+      feedback.info("Write a comment before posting.");
       return;
     }
 
@@ -36,6 +40,7 @@ export function TicketCommentCreate({
       await onSubmit(trimmedContent);
       setContent("");
       setSuccessMessage("Comment added successfully.");
+      feedback.success("Comment added to the ticket.");
     } catch (error) {
       const nextErrorMessage =
         error instanceof Error && error.message
@@ -43,6 +48,7 @@ export function TicketCommentCreate({
           : "Failed to add the comment.";
 
       setErrorMessage(nextErrorMessage);
+      feedback.error(nextErrorMessage);
     } finally {
       setIsSubmitting(false);
     }
