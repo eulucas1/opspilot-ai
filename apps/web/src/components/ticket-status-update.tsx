@@ -64,8 +64,10 @@ export function TicketStatusUpdate({
   }
 
   const isSameStatus = selectedStatus === currentStatus;
+  const hasFooterFeedback =
+    isSameStatus || Boolean(successMessage) || Boolean(errorMessage);
 
-  const footer = (
+  const footer = hasFooterFeedback ? (
     <div className="space-y-2">
       {isSameStatus ? (
         <p className="text-sm text-ink/60">
@@ -85,7 +87,7 @@ export function TicketStatusUpdate({
         </div>
       ) : null}
     </div>
-  );
+  ) : null;
 
   const body = (
     <div className="space-y-3">

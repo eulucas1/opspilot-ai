@@ -90,8 +90,13 @@ export function TicketAssigneeUpdate({
       ?.label ?? "Unknown";
 
   const isSubmitDisabled = isSubmitting || isSameAssignee || isVisualOnly;
+  const hasFooterFeedback =
+    (isSameAssignee && !isVisualOnly) ||
+    isVisualOnly ||
+    Boolean(successMessage) ||
+    Boolean(errorMessage);
 
-  const footer = (
+  const footer = hasFooterFeedback ? (
     <div className="space-y-2">
       {isSameAssignee && !isVisualOnly ? (
         <p className="text-sm text-ink/60">
@@ -117,7 +122,7 @@ export function TicketAssigneeUpdate({
         </div>
       ) : null}
     </div>
-  );
+  ) : null;
 
   const body = (
     <div className="space-y-3">
