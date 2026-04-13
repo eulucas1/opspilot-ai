@@ -383,23 +383,22 @@ export function TicketDetailPageContent({
             </div>
           </section>
 
-          <section className="rounded-[1.75rem] border border-ink/10 bg-white/70 p-6 shadow-soft backdrop-blur">
+          <section className="rounded-[1.75rem] border border-ink/10 bg-gradient-to-b from-white/90 to-sand/25 p-5 shadow-soft backdrop-blur sm:p-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-copper">
                   Actions
                 </p>
-                <h3 className="mt-2 text-2xl font-semibold text-ink">
-                  Keep the ticket moving
-                </h3>
-                <p className="mt-2 max-w-2xl text-sm leading-7 text-ink/70">
-                  Update the status, assign an owner, and leave a comment without
-                  leaving this page.
+                <h3 className="mt-2 text-2xl font-semibold text-ink">Keep the ticket moving</h3>
+                <p className="mt-2 max-w-2xl text-sm leading-7 text-ink/68">
+                  Update status, assign ownership, and add a quick note from one place.
                 </p>
               </div>
             </div>
 
-            <div className="mt-6 grid gap-6 xl:grid-cols-3">
+            <div className="mt-5 h-px bg-ink/10" />
+
+            <div className="mt-6 grid items-start gap-4 lg:grid-cols-3">
               <TicketStatusUpdate
                 currentStatus={ticket.status}
                 onSubmit={handleStatusUpdate}
