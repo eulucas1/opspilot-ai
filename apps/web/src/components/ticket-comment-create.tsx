@@ -11,6 +11,14 @@ type TicketCommentCreateProps = {
   onSubmit: (content: string) => Promise<void>;
 };
 
+function shortId(value: string): string {
+  if (value.length <= 16) {
+    return value;
+  }
+
+  return `${value.slice(0, 8)}...${value.slice(-4)}`;
+}
+
 export function TicketCommentCreate({
   organizationId,
   userId,
@@ -24,6 +32,10 @@ export function TicketCommentCreate({
 
   const trimmedContent = content.trim();
   const isContentEmpty = trimmedContent.length === 0;
+  const hasFooterFeedback =
+    (isContentEmpty && !isSubmitting) ||
+    Boolean(successMessage) ||
+    Boolean(errorMessage);
 
   async function handleSubmit() {
     if (isContentEmpty) {
@@ -55,7 +67,7 @@ export function TicketCommentCreate({
     }
   }
 
-  const footer = (
+  const footer = hasFooterFeedback ? (
     <div className="space-y-2">
       {isContentEmpty && !isSubmitting ? (
         <p className="text-sm text-ink/60">Write a message to enable posting.</p>
@@ -73,12 +85,13 @@ export function TicketCommentCreate({
         </div>
       ) : null}
     </div>
-  );
+  ) : null;
 
   const body = (
     <div className="space-y-3">
       <p className="text-xs leading-5 text-ink/58">
-        Posting as <span className="font-semibold text-ink/72">{userId}</span>
+        Actor <span className="font-semibold text-ink/72">{shortId(userId)}</span> • Org{" "}
+        <span className="font-semibold text-ink/72">{shortId(organizationId)}</span>
       </p>
 
       <label className="block">
@@ -112,8 +125,7 @@ export function TicketCommentCreate({
       body={body}
       description={
         <>
-          Quick context update for this ticket. Org:{" "}
-          <span className="font-semibold text-ink/75">{organizationId}</span>
+          Quick context update for this ticket.
         </>
       }
       footer={footer}
