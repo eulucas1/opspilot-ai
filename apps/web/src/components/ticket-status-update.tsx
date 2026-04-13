@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { TicketActionCardShell } from "@/components/ticket-action-card-shell";
 import { useFeedback } from "@/components/feedback-provider";
 import type { TicketStatus } from "@/types";
 import { formatTicketStatusLabel } from "@/lib/ticket-display";
@@ -64,70 +65,75 @@ export function TicketStatusUpdate({
 
   const isSameStatus = selectedStatus === currentStatus;
 
-  return (
-    <section className="rounded-[1.75rem] border border-ink/10 bg-white/80 p-6 shadow-soft backdrop-blur">
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-copper">
-            Status update
-          </p>
-          <h3 className="mt-2 text-2xl font-semibold text-ink">
-            Change ticket status
-          </h3>
-          <p className="mt-2 text-sm leading-7 text-ink/70">
-            Current status: <span className="font-semibold text-ink">{formatTicketStatusLabel(currentStatus)}</span>
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-          <label className="block">
-            <span className="text-sm font-medium text-ink/70">New status</span>
-            <select
-              className="mt-2 w-full min-w-[220px] rounded-2xl border border-ink/10 bg-sand/70 px-4 py-3 text-sm text-ink outline-none transition focus:border-copper disabled:cursor-not-allowed disabled:opacity-70"
-              disabled={isSubmitting}
-              onChange={(event) => {
-                setSelectedStatus(event.target.value as TicketStatus);
-                setErrorMessage(null);
-                setSuccessMessage(null);
-              }}
-              value={selectedStatus}
-            >
-              {statusOptions.map((status) => (
-                <option key={status} value={status}>
-                  {formatTicketStatusLabel(status)}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <button
-            className="rounded-full bg-ink px-5 py-3 text-sm font-medium text-sand transition hover:bg-[#18324d] disabled:cursor-not-allowed disabled:opacity-70"
-            disabled={isSubmitting || isSameStatus}
-            onClick={handleSubmit}
-            type="button"
-          >
-            {isSubmitting ? "Updating..." : "Update status"}
-          </button>
-        </div>
-      </div>
-
+  const footer = (
+    <div className="space-y-2">
       {isSameStatus ? (
-        <p className="mt-4 text-sm text-ink/60">
-          Select a different status to enable the update action.
+        <p className="text-sm text-ink/60">
+          Select a different status to enable the action.
         </p>
       ) : null}
 
       {successMessage ? (
-        <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-900">
           {successMessage}
         </div>
       ) : null}
 
       {errorMessage ? (
-        <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900">
+        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm text-rose-900">
           {errorMessage}
         </div>
       ) : null}
-    </section>
+    </div>
+  );
+
+  const body = (
+    <div className="space-y-3">
+      <label className="block">
+        <span className="text-sm font-medium text-ink/70">New status</span>
+        <select
+          className="mt-2 w-full rounded-2xl border border-ink/12 bg-sand/70 px-4 py-3 text-sm text-ink outline-none transition focus:border-copper disabled:cursor-not-allowed disabled:border-ink/10 disabled:bg-sand/35 disabled:text-ink/45"
+          disabled={isSubmitting}
+          onChange={(event) => {
+            setSelectedStatus(event.target.value as TicketStatus);
+            setErrorMessage(null);
+            setSuccessMessage(null);
+          }}
+          value={selectedStatus}
+        >
+          {statusOptions.map((status) => (
+            <option key={status} value={status}>
+              {formatTicketStatusLabel(status)}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <button
+        className="inline-flex w-full items-center justify-center rounded-full bg-ink px-5 py-3 text-sm font-semibold text-sand transition hover:bg-[#18324d] disabled:cursor-not-allowed disabled:bg-ink/35 disabled:text-sand/80"
+        disabled={isSubmitting || isSameStatus}
+        onClick={handleSubmit}
+        type="button"
+      >
+        {isSubmitting ? "Updating..." : "Update status"}
+      </button>
+    </div>
+  );
+
+  return (
+    <TicketActionCardShell
+      body={body}
+      description={
+        <>
+          Current:{" "}
+          <span className="font-semibold text-ink">
+            {formatTicketStatusLabel(currentStatus)}
+          </span>
+        </>
+      }
+      footer={footer}
+      label="Status"
+      title="Update status"
+    />
   );
 }
