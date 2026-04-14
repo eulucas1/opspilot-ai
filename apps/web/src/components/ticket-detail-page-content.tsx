@@ -300,17 +300,17 @@ export function TicketDetailPageContent({
   const assigneeTone = ticket?.assignee_user_id ? "default" : "muted";
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-8 px-6 py-8 sm:px-10 lg:px-12">
-      <section className="rounded-[2.25rem] border border-ink/10 bg-gradient-to-br from-white via-white to-sand/50 px-6 py-8 shadow-soft backdrop-blur sm:px-10">
+    <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-7 px-4 py-6 sm:gap-8 sm:px-6 sm:py-8 lg:px-10 xl:px-12">
+      <section className="rounded-[1.9rem] border border-ink/10 bg-gradient-to-br from-white via-white to-sand/50 px-5 py-6 shadow-soft backdrop-blur sm:rounded-[2.25rem] sm:px-8 sm:py-8 lg:px-10">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.28em] text-copper">
               Ticket Detail
             </p>
-            <h1 className="mt-3 text-4xl font-semibold tracking-tight text-ink sm:text-5xl">
+            <h1 className="mt-3 text-3xl font-semibold tracking-tight text-ink sm:text-4xl lg:text-5xl">
               {isLoading ? "Loading ticket..." : ticket?.title || "Ticket detail"}
             </h1>
-            <p className="mt-4 max-w-3xl text-lg leading-8 text-ink/75">
+            <p className="mt-4 max-w-3xl text-base leading-7 text-ink/75 sm:text-lg sm:leading-8">
               Detailed view powered by the real ticket, comments and activity endpoints
               from the OpsPilot AI backend.
             </p>
@@ -333,15 +333,15 @@ export function TicketDetailPageContent({
             ) : null}
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:gap-3 lg:w-auto">
             <Link
-              className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-sand transition hover:bg-[#18324d]"
+              className="w-full rounded-full bg-ink px-4 py-2 text-center text-sm font-medium text-sand transition hover:bg-[#18324d] sm:w-auto"
               href="/tickets"
             >
               Back to tickets
             </Link>
             <Link
-              className="rounded-full border border-ink/10 px-4 py-2 text-sm font-medium text-ink transition hover:border-copper hover:text-copper"
+              className="w-full rounded-full border border-ink/10 px-4 py-2 text-center text-sm font-medium text-ink transition hover:border-copper hover:text-copper sm:w-auto"
               href="/"
             >
               Home
@@ -358,13 +358,15 @@ export function TicketDetailPageContent({
 
       {!isLoading && !errorMessage && !isNotFound && ticket ? (
         <div className="space-y-8">
-          <section className="rounded-[1.75rem] border border-ink/10 bg-white/80 p-6 shadow-soft backdrop-blur">
+          <section className="rounded-[1.75rem] border border-ink/10 bg-white/80 p-5 shadow-soft backdrop-blur sm:p-6">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-copper">
                   Ticket Overview
                 </p>
-                <h2 className="mt-3 text-3xl font-semibold text-ink">{ticket.title}</h2>
+                <h2 className="mt-3 break-words text-2xl font-semibold text-ink sm:text-3xl">
+                  {ticket.title}
+                </h2>
                 <p className="mt-4 max-w-3xl text-sm leading-7 text-ink/75">{description}</p>
               </div>
 
@@ -398,7 +400,7 @@ export function TicketDetailPageContent({
 
             <div className="mt-5 h-px bg-ink/10" />
 
-            <div className="mt-6 grid items-start gap-4 lg:grid-cols-3">
+            <div className="mt-6 grid items-start gap-4 lg:grid-cols-2 xl:grid-cols-3">
               <TicketStatusUpdate
                 currentStatus={ticket.status}
                 onSubmit={handleStatusUpdate}
@@ -417,8 +419,8 @@ export function TicketDetailPageContent({
             </div>
           </section>
 
-          <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-            <article className="rounded-[1.75rem] border border-ink/10 bg-white/75 p-6 shadow-soft">
+          <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+            <article className="rounded-[1.75rem] border border-ink/10 bg-white/75 p-5 shadow-soft sm:p-6">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-copper">
                 Description
               </p>
@@ -427,7 +429,7 @@ export function TicketDetailPageContent({
               </p>
             </article>
 
-            <aside className="rounded-[1.75rem] border border-ink/10 bg-ink px-6 py-7 text-sand shadow-soft">
+            <aside className="rounded-[1.75rem] border border-ink/10 bg-ink px-5 py-6 text-sand shadow-soft sm:px-6 sm:py-7">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-mist">
                 Metadata
               </p>
@@ -446,7 +448,7 @@ export function TicketDetailPageContent({
             </aside>
           </section>
 
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-6 xl:grid-cols-2">
             <TicketCommentsSection comments={comments} />
             <TicketActivitySection activity={activity} />
           </div>

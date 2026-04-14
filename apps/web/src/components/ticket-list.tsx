@@ -24,7 +24,7 @@ function LoadingState() {
       {Array.from({ length: 3 }).map((_, index) => (
         <div
           key={`ticket-skeleton-${index}`}
-          className="animate-pulse rounded-[1.5rem] border border-ink/10 bg-white/70 p-5"
+          className="animate-pulse rounded-[1.5rem] border border-ink/10 bg-white/70 p-4 sm:p-5"
         >
           <div className="h-5 w-40 rounded-full bg-ink/10" />
           <div className="mt-4 flex flex-wrap gap-2">
@@ -46,7 +46,7 @@ function ErrorState({
   onRetry: () => void;
 }) {
   return (
-    <div className="rounded-[1.75rem] border border-rose-200 bg-rose-50 p-6 text-rose-900">
+    <div className="rounded-[1.75rem] border border-rose-200 bg-rose-50 p-5 text-rose-900 sm:p-6">
       <p className="text-sm font-semibold uppercase tracking-[0.2em] text-rose-700">
         API Error
       </p>
@@ -71,11 +71,11 @@ function EmptyState({
   onClearFilters: () => void;
 }) {
   return (
-    <div className="rounded-[1.75rem] border border-dashed border-ink/15 bg-white/65 p-8 text-center">
+    <div className="rounded-[1.75rem] border border-dashed border-ink/15 bg-white/65 p-6 text-center sm:p-8">
       <p className="text-sm font-semibold uppercase tracking-[0.2em] text-copper">
         No tickets
       </p>
-      <h3 className="mt-3 text-2xl font-semibold text-ink">
+      <h3 className="mt-3 text-xl font-semibold text-ink sm:text-2xl">
         {hasActiveFilters ? "No tickets match the current filters" : "No tickets available yet"}
       </h3>
       <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-ink/70">
@@ -86,7 +86,7 @@ function EmptyState({
       <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
         {hasActiveFilters ? (
           <button
-            className="rounded-full border border-ink/15 px-4 py-2 text-sm font-medium text-ink transition hover:border-copper hover:text-copper"
+            className="w-full rounded-full border border-ink/15 px-4 py-2 text-sm font-medium text-ink transition hover:border-copper hover:text-copper sm:w-auto"
             onClick={onClearFilters}
             type="button"
           >
@@ -94,7 +94,7 @@ function EmptyState({
           </button>
         ) : null}
         <Link
-          className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-sand transition hover:bg-[#18324d]"
+          className="w-full rounded-full bg-ink px-4 py-2 text-sm font-medium text-sand transition hover:bg-[#18324d] sm:w-auto"
           href="/tickets/new"
         >
           Create a ticket
@@ -129,14 +129,14 @@ export function TicketList({
       {tickets.map((ticket) => (
         <article
           key={ticket.id}
-          className="group rounded-[1.5rem] border border-ink/10 bg-white/80 p-5 shadow-soft backdrop-blur transition hover:-translate-y-0.5 hover:border-copper/40 hover:shadow-lg"
+          className="group rounded-[1.5rem] border border-ink/10 bg-white/80 p-4 shadow-soft backdrop-blur transition hover:-translate-y-0.5 hover:border-copper/40 hover:shadow-lg sm:p-5"
         >
           <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
             <div className="space-y-3">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper">
                 Ticket
               </p>
-              <h3 className="text-2xl font-semibold text-ink">
+              <h3 className="break-words text-xl font-semibold text-ink sm:text-2xl">
                 <Link
                   className="transition group-hover:text-copper"
                   href={`/tickets/${ticket.id}`}
@@ -168,16 +168,16 @@ export function TicketList({
             </div>
           </div>
 
-          <div className="mt-6 flex flex-wrap justify-between gap-3">
-            <div className="text-xs uppercase tracking-[0.2em] text-ink/50">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-xs uppercase tracking-[0.18em] text-ink/50">
               View the full ticket details and history
             </div>
             <Link
-              className="inline-flex items-center gap-2 rounded-full border border-ink/10 px-4 py-2 text-sm font-medium text-ink transition hover:border-copper hover:text-copper"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-ink/10 px-4 py-2 text-sm font-medium text-ink transition hover:border-copper hover:text-copper sm:w-auto"
               href={`/tickets/${ticket.id}`}
             >
               View details
-              <span aria-hidden="true">→</span>
+              <span aria-hidden="true">{"->"}</span>
             </Link>
           </div>
         </article>

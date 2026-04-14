@@ -186,13 +186,15 @@ export function TicketSummaryCards({
   const loadingItems = Array.from({ length: 5 });
 
   return (
-    <section className="rounded-[1.75rem] border border-ink/10 bg-white/80 p-5 shadow-soft backdrop-blur sm:p-6">
+    <section className="rounded-[1.75rem] border border-ink/10 bg-white/80 p-4 shadow-soft backdrop-blur sm:p-6">
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-copper">
             Overview
           </p>
-          <h2 className="mt-2 text-2xl font-semibold text-ink">Ticket summary</h2>
+          <h2 className="mt-2 text-xl font-semibold text-ink sm:text-2xl">
+            Ticket summary
+          </h2>
         </div>
         <p className="text-xs uppercase tracking-[0.18em] text-ink/55">
           {isLoading
@@ -205,7 +207,7 @@ export function TicketSummaryCards({
         </p>
       </div>
 
-      <div className="mt-5 lg:hidden">
+      <div className="mt-5 md:hidden">
         <div
           ref={scrollRef}
           className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -214,13 +216,13 @@ export function TicketSummaryCards({
             ? loadingItems.map((_, index) => (
                 <div
                   key={`summary-loading-mobile-${index}`}
-                  className="min-w-[180px] snap-start"
+                  className="min-w-[160px] snap-start sm:min-w-[190px]"
                 >
                   <LoadingCardItem index={index} />
                 </div>
               ))
             : summaryCards.map((card) => (
-                <div key={card.key} className="min-w-[180px] snap-start">
+                <div key={card.key} className="min-w-[160px] snap-start sm:min-w-[190px]">
                   <SummaryCardItem card={card} />
                 </div>
               ))}
@@ -250,7 +252,7 @@ export function TicketSummaryCards({
         ) : null}
       </div>
 
-      <div className="mt-5 hidden gap-3 lg:grid lg:grid-cols-5">
+      <div className="mt-5 hidden gap-3 md:grid md:grid-cols-3 xl:grid-cols-5">
         {isLoading
           ? loadingItems.map((_, index) => (
               <LoadingCardItem key={`summary-loading-desktop-${index}`} index={index} />
