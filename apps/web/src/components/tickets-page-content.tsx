@@ -156,37 +156,37 @@ export function TicketsPageContent() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-8 px-6 py-8 sm:px-10 lg:px-12">
-      <section className="rounded-[2rem] border border-ink/10 bg-white/80 px-6 py-8 shadow-soft backdrop-blur sm:px-10">
+    <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-7 px-4 py-6 sm:gap-8 sm:px-6 sm:py-8 lg:px-10 xl:px-12">
+      <section className="rounded-[1.75rem] border border-ink/10 bg-white/80 px-5 py-6 shadow-soft backdrop-blur sm:rounded-[2rem] sm:px-8 sm:py-8 lg:px-10">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-copper">
               Real API Integration
             </p>
-            <h1 className="mt-3 text-4xl font-semibold tracking-tight text-ink sm:text-5xl">
+            <h1 className="mt-3 text-3xl font-semibold tracking-tight text-ink sm:text-4xl lg:text-5xl">
               Tickets
             </h1>
-            <p className="mt-4 max-w-3xl text-lg leading-8 text-ink/75">
+            <p className="mt-4 max-w-3xl text-base leading-7 text-ink/75 sm:text-lg sm:leading-8">
               First frontend integration with the live OpsPilot AI backend. This view
               consumes the real <span className="font-semibold">GET /tickets</span>{" "}
               endpoint and keeps the interface intentionally simple.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:gap-3 lg:w-auto">
             <Link
-              className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-sand transition hover:bg-[#18324d]"
+              className="w-full rounded-full bg-ink px-4 py-2 text-center text-sm font-medium text-sand transition hover:bg-[#18324d] sm:w-auto"
               href="/tickets/new"
             >
               New ticket
             </Link>
             <Link
-              className="rounded-full border border-ink/10 px-4 py-2 text-sm font-medium text-ink transition hover:border-copper hover:text-copper"
+              className="w-full rounded-full border border-ink/10 px-4 py-2 text-center text-sm font-medium text-ink transition hover:border-copper hover:text-copper sm:w-auto"
               href="/"
             >
               Back to home
             </Link>
-            <div className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-sand">
+            <div className="w-full rounded-full bg-ink px-4 py-2 text-center text-sm font-medium text-sand sm:w-auto">
               {isLoading ? "Loading tickets..." : `${tickets.length} ticket(s)`}
             </div>
           </div>
@@ -214,7 +214,7 @@ export function TicketsPageContent() {
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-copper">
               Ticket Feed
             </p>
-            <h2 className="mt-2 text-2xl font-semibold text-ink">
+            <h2 className="mt-2 text-xl font-semibold text-ink sm:text-2xl">
               Latest operational tickets
             </h2>
           </div>
