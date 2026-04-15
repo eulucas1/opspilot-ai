@@ -76,6 +76,7 @@ class TicketRead(TimestampedSchema):
                 "organization_id": "11111111-1111-1111-1111-111111111111",
                 "created_by_user_id": "22222222-2222-2222-2222-222222222222",
                 "assignee_user_id": "33333333-3333-3333-3333-333333333333",
+                "project_id": "77777777-7777-7777-7777-777777777777",
                 "title": "Payment retry queue stopped",
                 "description": "Retry queue stopped processing failed payments after the latest deployment.",
                 "status": "open",
@@ -91,6 +92,10 @@ class TicketRead(TimestampedSchema):
     assignee_user_id: UUID | None = Field(
         default=None,
         description="Currently assigned user, when the ticket already has an assignee.",
+    )
+    project_id: UUID | None = Field(
+        default=None,
+        description="Related project identifier, when the ticket is linked to a project.",
     )
     title: str = Field(description="Short title that summarizes the ticket.")
     description: str = Field(description="Detailed description of the ticket context.")

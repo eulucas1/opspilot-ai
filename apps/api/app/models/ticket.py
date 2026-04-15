@@ -30,6 +30,12 @@ class Ticket(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         nullable=True,
         index=True,
     )
+    project_id: Mapped[UUID | None] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("projects.id"),
+        nullable=True,
+        index=True,
+    )
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     status: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -44,4 +50,5 @@ class Ticket(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         back_populates="assigned_tickets",
         foreign_keys=[assignee_user_id],
     )
+    project: Mapped["Project | None"] = relationship(back_populates="tickets")
     comments: Mapped[list["Comment"]] = relationship(back_populates="ticket")

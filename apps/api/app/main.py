@@ -11,6 +11,10 @@ OPENAPI_TAGS = [
         "description": "Operational health and readiness endpoints for the API service.",
     },
     {
+        "name": "Projects",
+        "description": "Project management endpoints used to group tickets within organizations.",
+    },
+    {
         "name": "Tickets",
         "description": "Ticket lifecycle endpoints, including creation, status, assignment, comments and activity history.",
     },
